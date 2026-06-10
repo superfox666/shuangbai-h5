@@ -402,7 +402,7 @@ function renderHome() {
         <aside class="hero-visual">
           <p class="eyebrow">实验预览</p>
           <div class="optional-scene-card">
-            <img src="./assets/generated/hero-lab-scene.svg" alt="识伪实验室概念图">
+            <img src="./assets/generated/hero-lab-scene.png" alt="识伪实验室概念图">
           </div>
           <div class="hero-preview-grid">
             ${tasks
@@ -470,15 +470,65 @@ function renderMap() {
 }
 
 function renderPhishing() {
+  const signalCards = [
+    {
+      id: "shortlink",
+      eyebrow: "来源链条",
+      title: "陌生短链接",
+      desc: "先回官方入口，不从陌生链接跳转。",
+    },
+    {
+      id: "urgent",
+      eyebrow: "时间压力",
+      title: "倒计时催促",
+      desc: "越催越要停，真正通知会给出核验渠道。",
+    },
+    {
+      id: "code",
+      eyebrow: "动作要求",
+      title: "索要验证码",
+      desc: "验证码就是一次性通行凭证。",
+    },
+  ];
   setScreen(`
     <section>
       <p class="eyebrow">实验一</p>
       <h2 class="section-title">钓鱼信息诊断</h2>
       <p class="lead">先找“来源链条”和“动作要求”。点击你认为真正危险的线索。</p>
       <div class="scenario">
-        <div class="message-box">
-          <div class="message-head"><span>模拟通知</span><span>09:42</span></div>
-          <p class="message-text">您的校园账号存在异常，30 分钟内未验证将冻结。请打开 <strong>https://safe-check.example.cn/9x</strong> 并输入验证码完成保护。</p>
+        <div class="phishing-board">
+          <div class="message-layout">
+            <div class="message-box phishing-phone">
+              <div class="message-head"><span>模拟通知</span><span>09:42</span></div>
+              <p class="message-text">
+                您的校园账号存在异常，30 分钟内未验证将冻结。请打开
+                <strong class="message-link">https://safe-check.example.cn/9x</strong>
+                并输入验证码完成保护。
+              </p>
+              <div class="message-highlight" aria-label="风险摘要">
+                <span class="message-chip is-risk">来源未验证</span>
+                <span class="message-chip is-warning">倒计时施压</span>
+                <span class="message-chip is-risk">索要验证码</span>
+              </div>
+            </div>
+            <div class="signal-grid">
+              ${signalCards.map((item) => phishingSignalCard(item)).join("")}
+            </div>
+          </div>
+          <div class="analysis-strip">
+            <div class="analysis-item">
+              <span>已命中真风险</span>
+              <strong>${state.found.phishing.size}/3</strong>
+            </div>
+            <div class="analysis-item">
+              <span>误点非主风险</span>
+              <strong>${state.missed.size}</strong>
+            </div>
+            <div class="analysis-item">
+              <span>判断顺序</span>
+              <strong>先看来源，再看动作</strong>
+            </div>
+          </div>
         </div>
         <div class="evidence-grid">
           ${evidenceSets.phishing.map((item) => evidenceButton("phishing", item)).join("")}
@@ -507,6 +557,18 @@ function evidenceButton(group, item) {
   `;
 }
 
+function phishingSignalCard(item) {
+  const active = state.found.phishing.has(item.id);
+  return `
+    <article class="signal-card ${active ? "is-found" : ""}">
+      <p class="eyebrow">${item.eyebrow}</p>
+      <h3>${item.title}</h3>
+      <p>${item.desc}</p>
+      <span class="signal-state">${active ? "已识别" : "待判断"}</span>
+    </article>
+  `;
+}
+
 function renderDeepfake() {
   const foundCount = state.found.deepfake.size;
   setScreen(`
@@ -514,10 +576,19 @@ function renderDeepfake() {
       <p class="eyebrow">实验二</p>
       <h2 class="section-title">深度伪造线索观察</h2>
       <p class="lead">这是自制示意图，不是真实人脸。视觉异常只能提示风险，不能单独定真伪。</p>
+      <div class="deepfake-brief">
+        <span class="scenario-chip is-safe">先看来源链</span>
+        <span class="scenario-chip is-neutral">再看光影与边缘</span>
+        <span class="scenario-chip is-warning">最后核对语义节奏</span>
+      </div>
       <div class="scenario">
-        <div class="diagram" aria-label="深度伪造线索示意图">
-          <img class="optional-bg-board" src="./assets/generated/deepfake-observation-board.svg" alt="" aria-hidden="true">
-          <img class="figure-image" src="./assets/illustrations/deepfake-figure.svg" alt="" aria-hidden="true">
+        <div class="diagram deepfake-diagram" aria-label="深度伪造线索示意图">
+          <img class="optional-bg-board" src="./assets/generated/deepfake-observation-board.png" alt="" aria-hidden="true">
+          <div class="scan-line" aria-hidden="true"></div>
+          <div class="diagram-caption">
+            <strong>观察顺序</strong>
+            <p>光照 → 边缘 → 口型节奏 → 原始发布者</p>
+          </div>
           <div class="hotspot-counter">已识别 ${foundCount}/4</div>
           ${evidenceSets.deepfake
             .map(
@@ -530,6 +601,9 @@ function renderDeepfake() {
             )
             .join("")}
         </div>
+        <div class="hotspot-legend">
+          ${evidenceSets.deepfake.map((item) => deepfakeLegendItem(item)).join("")}
+        </div>
         <div id="explain" class="explain-card">
           <strong>提示</strong>
           <p>把注意力放回证据链。视觉线索只是开始，来源和上下文才是判断中心。</p>
@@ -540,6 +614,19 @@ function renderDeepfake() {
   `);
 }
 
+function deepfakeLegendItem(item) {
+  const found = state.found.deepfake.has(item.id);
+  return `
+    <article class="legend-card ${found ? "is-found" : ""}">
+      <header>
+        <span class="legend-dot"></span>
+        <strong>${item.label}</strong>
+      </header>
+      <p>${item.explain}</p>
+    </article>
+  `;
+}
+
 function renderRumor() {
   const data = calcRumor();
   setScreen(`
@@ -547,25 +634,58 @@ function renderRumor() {
       <p class="eyebrow">实验三</p>
       <h2 class="section-title">谣言传播模拟器</h2>
       <p class="lead">这里不再用凑系数。我们把公众转发场景翻译成一个可交互的 SIR 传播模型。</p>
-      <div class="equation-strip" id="equationStrip">dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} S=${Math.round(
-    data.currentS
-  )} I=${Math.round(data.currentI)} R=${Math.round(data.currentR)}]</span></div>
+      <div class="equation-strip" id="equationStrip">dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} γ=${data.gamma.toFixed(
+    2
+  )} ψ=${data.psi.toFixed(2)} | S=${Math.round(data.currentS)} I=${Math.round(data.currentI)} R=${Math.round(
+    data.currentR
+  )}]</span></div>
+      <div class="rumor-scenario-tags" id="rumorTags">${rumorTagsHtml(data)}</div>
+      <div class="rumor-visual-grid">
+        <div class="network-card">
+          <div id="rumorChart">${curveSvg(data)}</div>
+          <div class="metric-grid">
+            <div class="metric"><span>I 峰值占比</span><strong id="peakMetric">${data.peakInfected.toFixed(1)}%</strong></div>
+            <div class="metric"><span>峰值出现步</span><strong id="peakStepMetric">t${data.peakStep}</strong></div>
+            <div class="metric"><span>末态已止传播</span><strong id="removedMetric">${data.finalRemoved.toFixed(1)}%</strong></div>
+            <div class="metric"><span>风险等级</span><strong id="riskMetric">${data.level}</strong></div>
+          </div>
+        </div>
+        <aside class="chart-stage-card">
+          <p class="side-label">传播态势</p>
+          <h3 id="stageTitle">${data.stageTitle}</h3>
+          <p class="stage-copy" id="stageCopy">${data.stageCopy}</p>
+          <div class="network-stats">
+            <div class="network-stat">
+              <span>易感 S</span>
+              <strong id="susceptibleMetric">${Math.round(data.currentS)}</strong>
+              <small>/1000</small>
+            </div>
+            <div class="network-stat">
+              <span>感染 I</span>
+              <strong id="infectedMetric">${Math.round(data.currentI)}</strong>
+              <small>/1000</small>
+            </div>
+            <div class="network-stat">
+              <span>移出 R</span>
+              <strong id="resolvedMetric">${Math.round(data.currentR)}</strong>
+              <small>/1000</small>
+            </div>
+            <div class="network-stat">
+              <span>即时 Rₑ</span>
+              <strong id="reMetric">${data.reproduction.toFixed(2)}</strong>
+              <small>${data.reproduction > 1 ? "扩散占优" : "澄清占优"}</small>
+            </div>
+          </div>
+        </aside>
+      </div>
       <div class="slider-group">
         ${sliderRow("share", "β 转发率", state.rumor.share)}
         ${sliderRow("delay", "γ 核验/停止传播率", state.rumor.delay)}
         ${sliderRow("authority", "ψ 权威澄清触达率", state.rumor.authority)}
       </div>
-      <div class="network-card">
-        <div id="rumorChart">${curveSvg(data)}</div>
-        <div class="metric-grid">
-          <div class="metric"><span>I 峰值占比</span><strong id="peakMetric">${data.peakInfected.toFixed(1)}%</strong></div>
-          <div class="metric"><span>末态已止传播</span><strong id="removedMetric">${data.finalRemoved.toFixed(1)}%</strong></div>
-          <div class="metric"><span>风险等级</span><strong id="riskMetric">${data.level}</strong></div>
-        </div>
-      </div>
       <div class="explain-card" id="rumorExplain">
-        <strong>${data.messageTitle}</strong>
-        <p>${data.message}</p>
+        <strong>${data.recommendationTitle}</strong>
+        <p>${data.recommendation}</p>
       </div>
       <details class="model-card">
         <summary>查看模型说明</summary>
@@ -586,21 +706,45 @@ function sliderRow(id, label, value) {
   return `
     <div class="slider-row">
       <label for="${id}Range"><span class="equation-label">${label}</span><output id="${id}Output">${value}%</output></label>
-      <input id="${id}Range" type="range" min="0" max="100" value="${value}" data-slider="${id}">
+      <div class="slider-shell" data-slider-shell="${id}">
+        <div class="slider-rail" aria-hidden="true">
+          <span class="slider-fill" id="${id}Fill" style="width:${value}%"></span>
+          <span class="slider-thumb" id="${id}Thumb" style="left:calc(${value}% - 12px)"></span>
+        </div>
+        <input id="${id}Range" class="slider-input" type="range" min="0" max="100" value="${value}" data-slider="${id}">
+      </div>
+      <div class="slider-scale">${sliderScale(id)}</div>
       <p class="slider-note">${sliderNote(id)}</p>
     </div>
   `;
+}
+
+function sliderScale(id) {
+  const labels = {
+    share: ["谨慎", "中等", "刷屏扩散"],
+    delay: ["迟疑", "核验中", "快速止损"],
+    authority: ["失联", "正在触达", "前置澄清"],
+  };
+  return labels[id].map((item) => `<span>${item}</span>`).join("");
 }
 
 function updateRumorView() {
   if (state.screen !== "rumor") return;
   const data = calcRumor();
   const equation = document.querySelector("#equationStrip");
+  const tags = document.querySelector("#rumorTags");
   const chart = document.querySelector("#rumorChart");
   const peak = document.querySelector("#peakMetric");
+  const peakStep = document.querySelector("#peakStepMetric");
   const removed = document.querySelector("#removedMetric");
   const risk = document.querySelector("#riskMetric");
   const explain = document.querySelector("#rumorExplain");
+  const stageTitle = document.querySelector("#stageTitle");
+  const stageCopy = document.querySelector("#stageCopy");
+  const susceptible = document.querySelector("#susceptibleMetric");
+  const infected = document.querySelector("#infectedMetric");
+  const resolved = document.querySelector("#resolvedMetric");
+  const reMetric = document.querySelector("#reMetric");
   const outputs = {
     share: document.querySelector("#shareOutput"),
     delay: document.querySelector("#delayOutput"),
@@ -610,18 +754,62 @@ function updateRumorView() {
   if (outputs.share) outputs.share.textContent = `${state.rumor.share}%`;
   if (outputs.delay) outputs.delay.textContent = `${state.rumor.delay}%`;
   if (outputs.authority) outputs.authority.textContent = `${state.rumor.authority}%`;
+  updateRumorSliderShell("share");
+  updateRumorSliderShell("delay");
+  updateRumorSliderShell("authority");
   if (equation) {
-    equation.innerHTML = `dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} S=${Math.round(data.currentS)} I=${Math.round(
-      data.currentI
-    )} R=${Math.round(data.currentR)}]</span>`;
+    equation.innerHTML = `dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} γ=${data.gamma.toFixed(2)} ψ=${data.psi.toFixed(
+      2
+    )} | S=${Math.round(data.currentS)} I=${Math.round(data.currentI)} R=${Math.round(data.currentR)}]</span>`;
   }
+  if (tags) tags.innerHTML = rumorTagsHtml(data);
   if (chart) chart.innerHTML = curveSvg(data);
   if (peak) peak.textContent = `${data.peakInfected.toFixed(1)}%`;
+  if (peakStep) peakStep.textContent = `t${data.peakStep}`;
   if (removed) removed.textContent = `${data.finalRemoved.toFixed(1)}%`;
   if (risk) risk.textContent = data.level;
+  if (stageTitle) stageTitle.textContent = data.stageTitle;
+  if (stageCopy) stageCopy.textContent = data.stageCopy;
+  if (susceptible) susceptible.textContent = `${Math.round(data.currentS)}`;
+  if (infected) infected.textContent = `${Math.round(data.currentI)}`;
+  if (resolved) resolved.textContent = `${Math.round(data.currentR)}`;
+  if (reMetric) reMetric.textContent = data.reproduction.toFixed(2);
   if (explain) {
-    explain.innerHTML = `<strong>${data.messageTitle}</strong><p>${data.message}</p>`;
+    explain.innerHTML = `<strong>${data.recommendationTitle}</strong><p>${data.recommendation}</p>`;
   }
+}
+
+function updateRumorSliderShell(id) {
+  const fill = document.querySelector(`#${id}Fill`);
+  const thumb = document.querySelector(`#${id}Thumb`);
+  const input = document.querySelector(`#${id}Range`);
+  const value = state.rumor[id];
+  if (fill) fill.style.width = `${value}%`;
+  if (thumb) thumb.style.left = `calc(${value}% - 12px)`;
+  if (input && Number(input.value) !== value) input.value = String(value);
+}
+
+function rumorTagsHtml(data) {
+  const chips = [
+    {
+      tone: state.rumor.share > 68 ? "risk" : state.rumor.share < 40 ? "safe" : "neutral",
+      label: state.rumor.share > 68 ? "高转发冲动" : state.rumor.share < 40 ? "用户转发谨慎" : "转发意愿中等",
+    },
+    {
+      tone: state.rumor.delay > 65 ? "safe" : state.rumor.delay < 40 ? "warning" : "neutral",
+      label: state.rumor.delay > 65 ? "核验速度较快" : state.rumor.delay < 40 ? "核验动作偏慢" : "核验速度中等",
+    },
+    {
+      tone: state.rumor.authority > 60 ? "safe" : state.rumor.authority < 35 ? "warning" : "neutral",
+      label:
+        state.rumor.authority > 60 ? "权威澄清前置触达" : state.rumor.authority < 35 ? "澄清信息滞后" : "澄清触达一般",
+    },
+    {
+      tone: data.reproduction > 1 ? "risk" : "safe",
+      label: `即时 Rₑ = ${data.reproduction.toFixed(2)}`,
+    },
+  ];
+  return chips.map((item) => `<span class="scenario-chip is-${item.tone}">${item.label}</span>`).join("");
 }
 
 function sliderNote(id) {
@@ -645,11 +833,15 @@ function calcRumor() {
   const steps = 200;
   const points = [];
   let peakInfected = i;
+  let peakStep = 0;
   let catchUpStep = null;
 
   for (let step = 0; step <= steps; step += 1) {
     points.push({ step, s, i, r });
-    peakInfected = Math.max(peakInfected, i);
+    if (i >= peakInfected) {
+      peakInfected = i;
+      peakStep = step;
+    }
 
     if (catchUpStep === null && gamma + psi >= beta * 0.92 && i <= peakInfected * 0.9) {
       catchUpStep = step;
@@ -670,18 +862,27 @@ function calcRumor() {
   const currentI = finalState.i * 1000;
   const currentR = finalState.r * 1000;
   const effectiveSpread = beta - (gamma + psi);
+  const reproduction = beta / Math.max(0.08, gamma + psi);
   const peakPct = peakInfected * 100;
   const level = peakPct > 34 || effectiveSpread > 0.18 ? "高" : peakPct > 18 || effectiveSpread > 0 ? "中" : "低";
-  const messageTitle =
-    level === "高" ? "扩散仍占上风" : level === "中" ? "澄清开始追赶" : "传播被明显压缩";
   const catchup =
     catchUpStep === null ? "较慢" : catchUpStep < 80 ? "较快" : catchUpStep < 140 ? "中等" : "偏慢";
-  const message =
-    level === "高"
-      ? `当前 β 明显高于 γ+ψ，感染态会快速放大。只要用户转发快、核验慢，权威澄清就很难及时追上。当前澄清追赶速度：${catchup}。`
-      : level === "中"
-      ? `γ 与 ψ 已开始压制传播，但感染峰值仍不低。把“暂停转发”和“尽快核验”一起做，才能把曲线继续压下去。当前澄清追赶速度：${catchup}。`
-      : `γ+ψ 已能明显压制 β，传播链条更容易在早期收缩。公众多等一步核验，本身就是降低扩散的干预。当前澄清追赶速度：${catchup}。`;
+  const stageTitle =
+    reproduction > 1.25 || level === "高" ? "失控扩散区" : reproduction > 0.95 ? "拉锯压制区" : "澄清领先区";
+  const stageCopy =
+    stageTitle === "失控扩散区"
+      ? `β 明显高于 γ+ψ，节点在高压转发下会快速串联。只要用户先转发再核验，澄清就会持续落后，当前追赶速度：${catchup}。`
+      : stageTitle === "拉锯压制区"
+      ? `γ 与 ψ 已开始追赶扩散，但峰值仍然不低。把“暂停转发”和“尽快核验”一起做，才能把峰值继续压低，当前追赶速度：${catchup}。`
+      : `γ+ψ 已经领先于 β，传播链条更容易在早期收缩。公众多等一步核验，本身就是降低扩散的干预，当前追赶速度：${catchup}。`;
+  const recommendationTitle =
+    stageTitle === "失控扩散区" ? "压低曲线的做法" : stageTitle === "拉锯压制区" ? "继续压低峰值" : "维持低扩散状态";
+  const recommendation =
+    stageTitle === "失控扩散区"
+      ? "优先把“先转发”改成“先核验”，同时提升权威澄清触达率。单靠一种干预通常不够，需要让 γ 与 ψ 一起追上 β。"
+      : stageTitle === "拉锯压制区"
+      ? "这时最有效的是继续降低转发冲动，并把核验动作前置。只要公众多停一步，峰值就有机会继续下压。"
+      : "当前传播已经被明显约束，但仍要保持来源核验和延迟转发。好的信息习惯不是一次操作，而是长期稳定执行。";
 
   return {
     beta,
@@ -689,13 +890,19 @@ function calcRumor() {
     psi,
     points,
     peakInfected: peakPct,
+    peakStep,
     finalRemoved,
     currentS,
     currentI,
     currentR,
+    reproduction,
     level,
-    messageTitle,
-    message,
+    stageTitle,
+    stageCopy,
+    recommendationTitle,
+    recommendation,
+    messageTitle: stageTitle,
+    message: stageCopy,
   };
 }
 
@@ -708,54 +915,55 @@ function clamp01(value) {
 }
 
 function curveSvg(data) {
-  const width = 320;
-  const height = 180;
-  const padX = 12;
-  const padY = 12;
-  const innerW = width - padX * 2;
-  const innerH = height - padY * 2;
-
-  const lines = [
-    pathForSeries(data.points, "s", innerW, innerH, padX, padY, "var(--color-chart-s)"),
-    pathForSeries(data.points, "i", innerW, innerH, padX, padY, "var(--color-chart-i)"),
-    pathForSeries(data.points, "r", innerW, innerH, padX, padY, "var(--color-chart-r)"),
-  ];
-
-  const nodes = buildNetworkNodes(data.points);
+  const width = 360;
+  const height = 236;
+  const chartX = 18;
+  const chartY = 18;
+  const chartW = 214;
+  const chartH = 168;
+  const bottomY = chartY + chartH;
+  const sLine = pathForSeries(data.points, "s", chartW, chartH, chartX, chartY, "#c7ddd4");
+  const iLine = pathForSeries(data.points, "i", chartW, chartH, chartX, chartY, "#c84735");
+  const rLine = pathForSeries(data.points, "r", chartW, chartH, chartX, chartY, "#0f8f76");
+  const infectedArea = areaPathForSeries(data.points, "i", chartW, chartH, chartX, chartY);
+  const peakPoint = seriesPoint(data.points, data.peakStep, "i", chartW, chartH, chartX, chartY);
+  const finalPoint = seriesPoint(data.points, data.points.length - 1, "i", chartW, chartH, chartX, chartY);
+  const grid = [0.25, 0.5, 0.75].map((ratio) => {
+    const y = chartY + chartH * ratio;
+    return `<line x1="${chartX}" y1="${y}" x2="${chartX + chartW}" y2="${y}" stroke="#e6edea" stroke-width="1.5" stroke-dasharray="4 6"></line>`;
+  });
+  const cluster = rumorClusterSvg(data);
   return `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="SIR 传播曲线示意">
-      <rect x="${padX}" y="${padY}" width="${innerW}" height="${innerH}" rx="10" fill="rgba(255,255,255,0.75)" stroke="#d8e1dc"/>
-      <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="#d8e1dc"/>
-      <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${height - padY}" stroke="#d8e1dc"/>
-      ${lines.map((line) => `<path d="${line.d}" fill="none" stroke="${line.color}" stroke-width="3" stroke-linecap="round"/>`).join("")}
-      ${legendMark(22, 24, "var(--color-chart-s)", "S")}
-      ${legendMark(84, 24, "var(--color-chart-i)", "I")}
-      ${legendMark(146, 24, "var(--color-chart-r)", "R")}
-      ${nodes}
+      <defs>
+        <linearGradient id="infectedFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(200,71,53,.34)"/>
+          <stop offset="100%" stop-color="rgba(200,71,53,0)"/>
+        </linearGradient>
+      </defs>
+      <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="18" fill="rgba(255,255,255,0.8)" stroke="#d8e1dc"/>
+      <rect x="${chartX}" y="${chartY}" width="${chartW}" height="${chartH}" rx="14" fill="rgba(255,255,255,0.72)" stroke="#d8e1dc"/>
+      ${grid.join("")}
+      <line x1="${chartX}" y1="${bottomY}" x2="${chartX + chartW}" y2="${bottomY}" stroke="#d8e1dc" stroke-width="2"/>
+      <line x1="${chartX}" y1="${chartY}" x2="${chartX}" y2="${bottomY}" stroke="#d8e1dc" stroke-width="2"/>
+      <path d="${infectedArea}" fill="url(#infectedFill)"></path>
+      <path d="${sLine.d}" fill="none" stroke="${sLine.color}" stroke-width="3" stroke-linecap="round"/>
+      <path d="${iLine.d}" fill="none" stroke="${iLine.color}" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="${rLine.d}" fill="none" stroke="${rLine.color}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${peakPoint.x}" cy="${peakPoint.y}" r="5.5" fill="#c84735" stroke="#fff" stroke-width="2"></circle>
+      <circle cx="${finalPoint.x}" cy="${finalPoint.y}" r="4.5" fill="#c84735" stroke="#fff" stroke-width="2"></circle>
+      <text x="${peakPoint.x + 8}" y="${peakPoint.y - 10}" fill="#c84735" font-size="12" font-weight="700">峰值 ${data.peakInfected.toFixed(
+        1
+      )}%</text>
+      ${legendMark(30, 202, "#c7ddd4", "S 易感")}
+      ${legendMark(110, 202, "#c84735", "I 传播")}
+      ${legendMark(192, 202, "#0f8f76", "R 移出")}
+      <text x="${chartX}" y="214" fill="#5b6962" font-size="12">t0</text>
+      <text x="${chartX + chartW * 0.48}" y="214" fill="#5b6962" font-size="12">峰值 t${data.peakStep}</text>
+      <text x="${chartX + chartW - 22}" y="214" fill="#5b6962" font-size="12">t200</text>
+      ${cluster}
     </svg>
   `;
-}
-
-function buildNetworkNodes(points) {
-  const step = points[Math.min(points.length - 1, 160)];
-  const infected = Math.max(2, Math.round(step.i * 12));
-  const baseNodes = [
-    [206, 24],
-    [228, 40],
-    [248, 62],
-    [268, 84],
-    [248, 110],
-    [226, 132],
-    [204, 150],
-  ];
-  return baseNodes
-    .map((node, index) => {
-      const active = index < infected;
-      return `<circle cx="${node[0]}" cy="${node[1]}" r="${active ? 6 : 4}" fill="${
-        active ? "#c84735" : "#d8e1dc"
-      }"></circle>`;
-    })
-    .join("");
 }
 
 function pathForSeries(points, key, innerW, innerH, padX, padY, color) {
@@ -768,6 +976,92 @@ function pathForSeries(points, key, innerW, innerH, padX, padY, color) {
     })
     .join(" ");
   return { d, color };
+}
+
+function areaPathForSeries(points, key, innerW, innerH, padX, padY) {
+  const maxIndex = points.length - 1;
+  const upper = points
+    .map((point, index) => {
+      const x = padX + (innerW * index) / maxIndex;
+      const y = padY + innerH - point[key] * innerH;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+  const baseEnd = `${(padX + innerW).toFixed(2)} ${(padY + innerH).toFixed(2)}`;
+  const baseStart = `${padX.toFixed(2)} ${(padY + innerH).toFixed(2)}`;
+  return `${upper} L${baseEnd} L${baseStart} Z`;
+}
+
+function seriesPoint(points, index, key, innerW, innerH, padX, padY) {
+  const maxIndex = points.length - 1;
+  const point = points[index];
+  return {
+    x: +(padX + (innerW * index) / maxIndex).toFixed(2),
+    y: +(padY + innerH - point[key] * innerH).toFixed(2),
+  };
+}
+
+function rumorClusterSvg(data) {
+  const nodes = [
+    [266, 54],
+    [288, 34],
+    [312, 46],
+    [330, 76],
+    [316, 104],
+    [288, 116],
+    [262, 96],
+    [282, 78],
+    [304, 86],
+    [340, 48],
+    [336, 102],
+    [264, 32],
+  ];
+  const links = [
+    [0, 1],
+    [0, 7],
+    [1, 2],
+    [2, 9],
+    [2, 8],
+    [7, 8],
+    [8, 10],
+    [7, 6],
+    [6, 5],
+    [5, 4],
+    [4, 10],
+    [6, 11],
+    [11, 1],
+    [0, 3],
+    [3, 10],
+  ];
+  const infected = Math.min(nodes.length, Math.max(1, Math.round((data.currentI / 1000) * nodes.length)));
+  const resolved = Math.min(nodes.length - infected, Math.round((data.currentR / 1000) * nodes.length));
+  const edges = links
+    .map(([a, b]) => {
+      const from = nodes[a];
+      const to = nodes[b];
+      return `<line x1="${from[0]}" y1="${from[1]}" x2="${to[0]}" y2="${to[1]}" stroke="#d7dfdb" stroke-width="2"></line>`;
+    })
+    .join("");
+  const circles = nodes
+    .map((node, index) => {
+      let fill = "#d8e1dc";
+      if (index < infected) fill = "#c84735";
+      else if (index < infected + resolved) fill = "#0f8f76";
+      return `<circle cx="${node[0]}" cy="${node[1]}" r="${index < infected ? 6 : 5}" fill="${fill}" stroke="#fff" stroke-width="2"></circle>`;
+    })
+    .join("");
+
+  return `
+    <g>
+      <rect x="246" y="24" width="96" height="116" rx="16" fill="rgba(248,251,250,0.95)" stroke="#d8e1dc"></rect>
+      <text x="260" y="44" fill="#17211d" font-size="12" font-weight="700">节点态势</text>
+      ${edges}
+      ${circles}
+      <text x="260" y="152" fill="#5b6962" font-size="11">红 = 扩散中</text>
+      <text x="260" y="168" fill="#5b6962" font-size="11">绿 = 已止传播</text>
+      <text x="260" y="184" fill="#5b6962" font-size="11">灰 = 仍易感</text>
+    </g>
+  `;
 }
 
 function legendMark(x, y, color, label) {
@@ -784,6 +1078,23 @@ function renderPrivacy() {
       <p class="eyebrow">实验四</p>
       <h2 class="section-title">隐私授权风险判断</h2>
       <p class="lead">判断模拟 App 权限是否必要。原则不是“全都拒绝”，而是“与当前功能直接相关才临时允许”。</p>
+      <div class="privacy-summary">
+        <div class="privacy-score-ring" style="--score:${result.score}">
+          <div class="privacy-score-inner">
+            <strong>${result.score}</strong>
+            <span>最小必要分</span>
+          </div>
+        </div>
+        <div class="privacy-summary-copy">
+          <strong>${result.title}</strong>
+          <p>${result.message}</p>
+          <div class="privacy-chip-row">
+            <span class="privacy-chip ${result.riskyCount ? "is-risk" : "is-safe"}">多余授权 ${result.riskyCount}</span>
+            <span class="privacy-chip ${result.neededDeniedCount ? "is-warning" : "is-safe"}">必要权限缺失 ${result.neededDeniedCount}</span>
+            <span class="privacy-chip is-neutral">当前已开 ${result.allowedCount}/4</span>
+          </div>
+        </div>
+      </div>
       <div class="permission-phone">
         <div class="message-head"><span>模拟应用：安全训练营</span><span>权限设置</span></div>
         <div class="permission-list">
@@ -829,11 +1140,15 @@ function renderPrivacy() {
 function calcPrivacy() {
   const risky = permissions.filter((permission) => !permission.needed && state.privacy[permission.id]);
   const neededDenied = permissions.filter((permission) => permission.needed && !state.privacy[permission.id]);
+  const allowedCount = permissions.filter((permission) => state.privacy[permission.id]).length;
   if (risky.length > 1) {
     return {
       score: 35,
       title: "授权过多",
       message: `${risky.map((item) => item.title).join("、")}不是当前答题训练的必要权限。请按最小必要原则关闭与功能无关的敏感权限。`,
+      riskyCount: risky.length,
+      neededDeniedCount: neededDenied.length,
+      allowedCount,
     };
   }
   if (risky.length === 1) {
@@ -841,6 +1156,9 @@ function calcPrivacy() {
       score: 65,
       title: "仍有一个高风险授权",
       message: `${risky[0].risk} 权限判断要回到“现在这项功能是否真的需要”。`,
+      riskyCount: risky.length,
+      neededDeniedCount: neededDenied.length,
+      allowedCount,
     };
   }
   if (neededDenied.length > 0) {
@@ -848,12 +1166,18 @@ function calcPrivacy() {
       score: 82,
       title: "保护意识较好",
       message: "你没有额外放开高风险权限。确实需要扫码时，可以临时允许相机，用完后再关闭。",
+      riskyCount: risky.length,
+      neededDeniedCount: neededDenied.length,
+      allowedCount,
     };
   }
   return {
     score: 95,
     title: "接近最小必要授权",
     message: "只允许与当前功能直接相关的权限，是降低个人信息暴露面的有效习惯。",
+    riskyCount: risky.length,
+    neededDeniedCount: neededDenied.length,
+    allowedCount,
   };
 }
 
@@ -871,6 +1195,9 @@ function renderReport() {
         </div>
         <div class="radar-wrap">
           ${radarSvg(scores)}
+        </div>
+        <div class="report-insight-row">
+          ${reportHighlights(scores, total)}
         </div>
         <div class="ability-list">
           ${abilityRow("来源核验", scores.source)}
@@ -911,6 +1238,32 @@ function calcScores() {
   const spread = Math.max(25, 100 - Math.round(rumorData.peakInfected * 1.5));
   const privacy = calcPrivacy().score;
   return { source, evidence, spread, privacy };
+}
+
+function reportHighlights(scores, total) {
+  const entries = [
+    { label: "来源核验", value: scores.source },
+    { label: "证据观察", value: scores.evidence },
+    { label: "传播抑制", value: scores.spread },
+    { label: "隐私保护", value: scores.privacy },
+  ];
+  const best = [...entries].sort((a, b) => b.value - a.value)[0];
+  const weakest = [...entries].sort((a, b) => a.value - b.value)[0];
+  const tone = total >= 86 ? "is-safe" : total >= 72 ? "is-neutral" : "is-warning";
+  return `
+    <article class="insight-pill ${tone}">
+      <span>综合状态</span>
+      <strong>${total >= 86 ? "可对外展示" : total >= 72 ? "继续优化" : "需要再练"}</strong>
+    </article>
+    <article class="insight-pill is-safe">
+      <span>最佳维度</span>
+      <strong>${best.label} ${best.value.toFixed(0)}</strong>
+    </article>
+    <article class="insight-pill is-warning">
+      <span>待加强</span>
+      <strong>${weakest.label} ${weakest.value.toFixed(0)}</strong>
+    </article>
+  `;
 }
 
 function abilityRow(label, value) {
