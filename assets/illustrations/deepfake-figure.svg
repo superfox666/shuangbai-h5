@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 240" fill="none">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f2d6c9"/>
+      <stop offset="100%" stop-color="#d9ab98"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.08"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <path d="M48 38C58 18 122 18 132 38c12 22 10 58 8 94-2 38-18 72-50 72S42 170 40 132c-2-36-4-72 8-94Z" fill="url(#skin)" stroke="rgba(23,33,29,.45)" stroke-width="2"/>
+  <ellipse cx="72" cy="98" rx="8" ry="4" fill="#17211d"/>
+  <ellipse cx="108" cy="98" rx="8" ry="4" fill="#17211d"/>
+  <path d="M77 147c10 10 26 10 36 0" stroke="#763a31" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50 78h82" stroke="rgba(200,71,53,.8)" stroke-width="2"/>
+  <path d="M38 166h90" stroke="rgba(200,71,53,.8)" stroke-width="2"/>
+  <rect x="0" y="0" width="180" height="240" filter="url(#grain)"/>
+</svg>
