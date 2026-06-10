@@ -362,25 +362,76 @@ function setScreen(html) {
 function renderHome() {
   setScreen(`
     <section class="hero">
-      <div class="hero-mark">${icon("lab")}</div>
-      <div>
-        <p class="eyebrow">AI 时代的信息识别科普</p>
-        <h2>智辨AI</h2>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="hero-mark">${icon("lab")}</div>
+          <div>
+            <p class="eyebrow">AI 时代的信息识别科普</p>
+            <h2>智辨AI</h2>
+          </div>
+          <p class="lead">这是一间 5 到 8 分钟就能走完的识伪实验室。你会依次完成钓鱼信息、深度伪造、谣言传播和隐私授权 4 个实验，最后拿到一份匿名识伪能力报告。</p>
+          <div class="tag-row" aria-label="能力标签">
+            <span class="tag">看来源</span>
+            <span class="tag">找证据</span>
+            <span class="tag">慢转发</span>
+            <span class="tag">少授权</span>
+          </div>
+          <div class="hero-facts">
+            <article class="fact-card">
+              <strong>4 个实验</strong>
+              <p>每个实验只讲一个关键判断方法。</p>
+            </article>
+            <article class="fact-card">
+              <strong>3 类高频风险</strong>
+              <p>群聊转发、AI 画面、App 权限。</p>
+            </article>
+            <article class="fact-card">
+              <strong>1 份报告</strong>
+              <p>最后得到可截图的识伪能力总结。</p>
+            </article>
+          </div>
+          <div class="hero-note">
+            <strong>30 秒内你会知道：</strong>
+            <p>我们不是在做网页 PPT，而是在做一个能让普通用户“先判断、再理解、再带走方法”的交互式科普实验室。</p>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" type="button" data-nav="map">进入实验室</button>
+            <button class="secondary-button" type="button" data-nav="about">先看作品结构</button>
+          </div>
+        </div>
+        <aside class="hero-visual">
+          <p class="eyebrow">实验预览</p>
+          <div class="optional-scene-card">
+            <img src="./assets/generated/hero-lab-scene.svg" alt="识伪实验室概念图">
+          </div>
+          <div class="hero-preview-grid">
+            ${tasks
+              .map(
+                (task, index) => `
+              <article class="preview-card preview-card-${task.id}">
+                <span class="preview-icon">${icon(task.icon)}</span>
+                <div>
+                  <p class="preview-index">0${index + 1}</p>
+                  <h3>${task.title}</h3>
+                  <p>${task.short}</p>
+                </div>
+              </article>
+            `
+              )
+              .join("")}
+          </div>
+          <div class="hero-visual-foot">
+            <img class="hero-figure" src="./assets/illustrations/deepfake-figure.svg" alt="" aria-hidden="true">
+            <div class="hero-visual-copy">
+              <strong>最后你会得到什么？</strong>
+              <p>一份包含来源核验、证据观察、传播抑制、隐私保护 4 个维度的识伪能力报告。</p>
+            </div>
+          </div>
+        </aside>
       </div>
-      <p class="lead">四个互动实验，带你用更稳妥的方式处理钓鱼信息、深度伪造、网络谣言和隐私授权。</p>
-      <div class="tag-row" aria-label="能力标签">
-        <span class="tag">看来源</span>
-        <span class="tag">找证据</span>
-        <span class="tag">慢转发</span>
-        <span class="tag">少授权</span>
-      </div>
-      <div class="hero-note">
-        <strong>30 秒内你会知道：</strong>
-        <p>这不是网页 PPT，而是一间可操作的识伪实验室。每个实验都对应一条权威知识线索和一个可以复述的行动建议。</p>
-      </div>
-      <div class="button-row">
-        <button class="primary-button" type="button" data-nav="map">进入实验室</button>
-        <button class="secondary-button" type="button" data-nav="about">先看作品结构</button>
+      <div class="detail-banner">
+        <span>适合谁：高校学生 / 青少年 / 社区公众</span>
+        <span>适合场景：群聊转发 / AI 视频辨识 / App 授权判断</span>
       </div>
     </section>
   `);
@@ -465,6 +516,7 @@ function renderDeepfake() {
       <p class="lead">这是自制示意图，不是真实人脸。视觉异常只能提示风险，不能单独定真伪。</p>
       <div class="scenario">
         <div class="diagram" aria-label="深度伪造线索示意图">
+          <img class="optional-bg-board" src="./assets/generated/deepfake-observation-board.svg" alt="" aria-hidden="true">
           <img class="figure-image" src="./assets/illustrations/deepfake-figure.svg" alt="" aria-hidden="true">
           <div class="hotspot-counter">已识别 ${foundCount}/4</div>
           ${evidenceSets.deepfake
@@ -495,7 +547,7 @@ function renderRumor() {
       <p class="eyebrow">实验三</p>
       <h2 class="section-title">谣言传播模拟器</h2>
       <p class="lead">这里不再用凑系数。我们把公众转发场景翻译成一个可交互的 SIR 传播模型。</p>
-      <div class="equation-strip">dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} S=${Math.round(
+      <div class="equation-strip" id="equationStrip">dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} S=${Math.round(
     data.currentS
   )} I=${Math.round(data.currentI)} R=${Math.round(data.currentR)}]</span></div>
       <div class="slider-group">
@@ -504,14 +556,14 @@ function renderRumor() {
         ${sliderRow("authority", "ψ 权威澄清触达率", state.rumor.authority)}
       </div>
       <div class="network-card">
-        ${curveSvg(data)}
+        <div id="rumorChart">${curveSvg(data)}</div>
         <div class="metric-grid">
-          <div class="metric"><span>I 峰值占比</span><strong>${data.peakInfected.toFixed(1)}%</strong></div>
-          <div class="metric"><span>末态已止传播</span><strong>${data.finalRemoved.toFixed(1)}%</strong></div>
-          <div class="metric"><span>风险等级</span><strong>${data.level}</strong></div>
+          <div class="metric"><span>I 峰值占比</span><strong id="peakMetric">${data.peakInfected.toFixed(1)}%</strong></div>
+          <div class="metric"><span>末态已止传播</span><strong id="removedMetric">${data.finalRemoved.toFixed(1)}%</strong></div>
+          <div class="metric"><span>风险等级</span><strong id="riskMetric">${data.level}</strong></div>
         </div>
       </div>
-      <div class="explain-card">
+      <div class="explain-card" id="rumorExplain">
         <strong>${data.messageTitle}</strong>
         <p>${data.message}</p>
       </div>
@@ -538,6 +590,38 @@ function sliderRow(id, label, value) {
       <p class="slider-note">${sliderNote(id)}</p>
     </div>
   `;
+}
+
+function updateRumorView() {
+  if (state.screen !== "rumor") return;
+  const data = calcRumor();
+  const equation = document.querySelector("#equationStrip");
+  const chart = document.querySelector("#rumorChart");
+  const peak = document.querySelector("#peakMetric");
+  const removed = document.querySelector("#removedMetric");
+  const risk = document.querySelector("#riskMetric");
+  const explain = document.querySelector("#rumorExplain");
+  const outputs = {
+    share: document.querySelector("#shareOutput"),
+    delay: document.querySelector("#delayOutput"),
+    authority: document.querySelector("#authorityOutput"),
+  };
+
+  if (outputs.share) outputs.share.textContent = `${state.rumor.share}%`;
+  if (outputs.delay) outputs.delay.textContent = `${state.rumor.delay}%`;
+  if (outputs.authority) outputs.authority.textContent = `${state.rumor.authority}%`;
+  if (equation) {
+    equation.innerHTML = `dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} S=${Math.round(data.currentS)} I=${Math.round(
+      data.currentI
+    )} R=${Math.round(data.currentR)}]</span>`;
+  }
+  if (chart) chart.innerHTML = curveSvg(data);
+  if (peak) peak.textContent = `${data.peakInfected.toFixed(1)}%`;
+  if (removed) removed.textContent = `${data.finalRemoved.toFixed(1)}%`;
+  if (risk) risk.textContent = data.level;
+  if (explain) {
+    explain.innerHTML = `<strong>${data.messageTitle}</strong><p>${data.message}</p>`;
+  }
 }
 
 function sliderNote(id) {
@@ -1085,8 +1169,7 @@ screen.addEventListener("input", (event) => {
   const slider = event.target.closest("[data-slider]");
   if (slider) {
     state.rumor[slider.dataset.slider] = Number(slider.value);
-    addLog("SIR", `更新 ${slider.dataset.slider} 参数为 ${slider.value}%。`);
-    renderRumor();
+    updateRumorView();
     return;
   }
 
@@ -1095,6 +1178,13 @@ screen.addEventListener("input", (event) => {
     state.privacy[permission.dataset.permission] = permission.checked;
     addLog("权限", `${permission.dataset.permission} 已${permission.checked ? "开启" : "关闭"}。`);
     renderPrivacy();
+  }
+});
+
+screen.addEventListener("change", (event) => {
+  const slider = event.target.closest("[data-slider]");
+  if (slider) {
+    addLog("SIR", `更新 ${slider.dataset.slider} 参数为 ${slider.value}%。`);
   }
 });
 
