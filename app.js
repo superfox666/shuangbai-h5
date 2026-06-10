@@ -364,10 +364,23 @@ function renderHome() {
     <section class="hero">
       <div class="hero-grid">
         <div class="hero-copy">
-          <div class="hero-mark">${icon("lab")}</div>
-          <div>
-            <p class="eyebrow">AI 时代的信息识别科普</p>
-            <h2>智辨AI</h2>
+          <div class="hero-headline-row">
+            <div class="hero-headline-copy">
+              <div class="hero-mark">${icon("lab")}</div>
+              <div>
+                <p class="eyebrow">AI 时代的信息识别科普</p>
+                <h2>智辨AI</h2>
+              </div>
+            </div>
+            <div class="hero-inline-scene">
+              <img
+                src="./assets/generated/hero-lab-scene.png?v=20260611b"
+                alt="识伪实验室概念图"
+                loading="eager"
+                decoding="sync"
+                fetchpriority="high"
+              >
+            </div>
           </div>
           <p class="lead">这是一间 5 到 8 分钟就能走完的识伪实验室。你会依次完成钓鱼信息、深度伪造、谣言传播和隐私授权 4 个实验，最后拿到一份匿名识伪能力报告。</p>
           <div class="tag-row" aria-label="能力标签">
@@ -401,9 +414,6 @@ function renderHome() {
         </div>
         <aside class="hero-visual">
           <p class="eyebrow">实验预览</p>
-          <div class="optional-scene-card">
-            <img src="./assets/generated/hero-lab-scene.png" alt="识伪实验室概念图">
-          </div>
           <div class="hero-preview-grid">
             ${tasks
               .map(
@@ -583,7 +593,7 @@ function renderDeepfake() {
       </div>
       <div class="scenario">
         <div class="diagram deepfake-diagram" aria-label="深度伪造线索示意图">
-          <img class="optional-bg-board" src="./assets/generated/deepfake-observation-board.png" alt="" aria-hidden="true">
+          <img class="optional-bg-board" src="./assets/generated/deepfake-observation-board.png?v=20260611b" alt="" aria-hidden="true">
           <div class="scan-line" aria-hidden="true"></div>
           <div class="diagram-caption">
             <strong>观察顺序</strong>
@@ -918,16 +928,19 @@ function curveSvg(data) {
   const width = 360;
   const height = 236;
   const chartX = 18;
-  const chartY = 18;
+  const chartY = 60;
   const chartW = 214;
-  const chartH = 168;
+  const chartH = 126;
   const bottomY = chartY + chartH;
-  const sLine = pathForSeries(data.points, "s", chartW, chartH, chartX, chartY, "#c7ddd4");
-  const iLine = pathForSeries(data.points, "i", chartW, chartH, chartX, chartY, "#c84735");
-  const rLine = pathForSeries(data.points, "r", chartW, chartH, chartX, chartY, "#0f8f76");
-  const infectedArea = areaPathForSeries(data.points, "i", chartW, chartH, chartX, chartY);
-  const peakPoint = seriesPoint(data.points, data.peakStep, "i", chartW, chartH, chartX, chartY);
-  const finalPoint = seriesPoint(data.points, data.points.length - 1, "i", chartW, chartH, chartX, chartY);
+  const focusMax = Math.max(0.06, ...data.points.map((point) => Math.max(point.i, point.r))) * 1.1;
+  const sBandY = 22;
+  const sBandH = 20;
+  const sLine = pathForSeriesScaled(data.points, "s", 1, chartW, sBandH, chartX, sBandY, "#c7ddd4", 0.88);
+  const iLine = pathForSeriesScaled(data.points, "i", focusMax, chartW, chartH, chartX, chartY, "#c84735");
+  const rLine = pathForSeriesScaled(data.points, "r", focusMax, chartW, chartH, chartX, chartY, "#0f8f76");
+  const infectedArea = areaPathForSeriesScaled(data.points, "i", focusMax, chartW, chartH, chartX, chartY);
+  const peakPoint = seriesPointScaled(data.points, data.peakStep, "i", focusMax, chartW, chartH, chartX, chartY);
+  const finalPoint = seriesPointScaled(data.points, data.points.length - 1, "i", focusMax, chartW, chartH, chartX, chartY);
   const grid = [0.25, 0.5, 0.75].map((ratio) => {
     const y = chartY + chartH * ratio;
     return `<line x1="${chartX}" y1="${y}" x2="${chartX + chartW}" y2="${y}" stroke="#e6edea" stroke-width="1.5" stroke-dasharray="4 6"></line>`;
@@ -943,13 +956,14 @@ function curveSvg(data) {
       </defs>
       <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="18" fill="rgba(255,255,255,0.8)" stroke="#d8e1dc"/>
       <rect x="${chartX}" y="${chartY}" width="${chartW}" height="${chartH}" rx="14" fill="rgba(255,255,255,0.72)" stroke="#d8e1dc"/>
+      <rect x="${chartX}" y="${sBandY}" width="${chartW}" height="${sBandH}" rx="10" fill="rgba(255,255,255,0.72)" stroke="#d8e1dc"/>
       ${grid.join("")}
       <line x1="${chartX}" y1="${bottomY}" x2="${chartX + chartW}" y2="${bottomY}" stroke="#d8e1dc" stroke-width="2"/>
       <line x1="${chartX}" y1="${chartY}" x2="${chartX}" y2="${bottomY}" stroke="#d8e1dc" stroke-width="2"/>
-      <path d="${infectedArea}" fill="url(#infectedFill)"></path>
       <path d="${sLine.d}" fill="none" stroke="${sLine.color}" stroke-width="3" stroke-linecap="round"/>
-      <path d="${iLine.d}" fill="none" stroke="${iLine.color}" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="${rLine.d}" fill="none" stroke="${rLine.color}" stroke-width="3" stroke-linecap="round"/>
+      <path d="${infectedArea}" fill="url(#infectedFill)"></path>
+      <path d="${iLine.d}" fill="none" stroke="${iLine.color}" stroke-width="4.2" stroke-linecap="round"/>
+      <path d="${rLine.d}" fill="none" stroke="${rLine.color}" stroke-width="4" stroke-linecap="round"/>
       <circle cx="${peakPoint.x}" cy="${peakPoint.y}" r="5.5" fill="#c84735" stroke="#fff" stroke-width="2"></circle>
       <circle cx="${finalPoint.x}" cy="${finalPoint.y}" r="4.5" fill="#c84735" stroke="#fff" stroke-width="2"></circle>
       <text x="${peakPoint.x + 8}" y="${peakPoint.y - 10}" fill="#c84735" font-size="12" font-weight="700">峰值 ${data.peakInfected.toFixed(
@@ -959,8 +973,11 @@ function curveSvg(data) {
       ${legendMark(110, 202, "#c84735", "I 传播")}
       ${legendMark(192, 202, "#0f8f76", "R 移出")}
       <text x="${chartX}" y="214" fill="#5b6962" font-size="12">t0</text>
-      <text x="${chartX + chartW * 0.48}" y="214" fill="#5b6962" font-size="12">峰值 t${data.peakStep}</text>
+      <text x="${chartX + chartW * 0.44}" y="214" fill="#5b6962" font-size="12">峰值 t${data.peakStep}</text>
       <text x="${chartX + chartW - 22}" y="214" fill="#5b6962" font-size="12">t200</text>
+      <text x="${chartX + 6}" y="${sBandY + 14}" fill="#5b6962" font-size="11">S 高频带</text>
+      <text x="${chartX + 6}" y="${chartY + 14}" fill="#5b6962" font-size="11">I/R 动态区</text>
+      <text x="${chartX + chartW - 32}" y="${chartY + 14}" fill="#5b6962" font-size="11">${(focusMax * 100).toFixed(1)}%</text>
       ${cluster}
     </svg>
   `;
@@ -972,6 +989,21 @@ function pathForSeries(points, key, innerW, innerH, padX, padY, color) {
     .map((point, index) => {
       const x = padX + (innerW * index) / maxIndex;
       const y = padY + innerH - point[key] * innerH;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+  return { d, color };
+}
+
+function pathForSeriesScaled(points, key, scaleMax, innerW, innerH, padX, padY, color, floor = 0) {
+  const maxIndex = points.length - 1;
+  const d = points
+    .map((point, index) => {
+      const x = padX + (innerW * index) / maxIndex;
+      const normalized = key === "s" && floor
+        ? Math.max(0, Math.min(1, (point[key] - floor) / Math.max(0.001, 1 - floor)))
+        : Math.max(0, Math.min(1, point[key] / Math.max(0.001, scaleMax)));
+      const y = padY + innerH - normalized * innerH;
       return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ");
@@ -992,12 +1024,37 @@ function areaPathForSeries(points, key, innerW, innerH, padX, padY) {
   return `${upper} L${baseEnd} L${baseStart} Z`;
 }
 
+function areaPathForSeriesScaled(points, key, scaleMax, innerW, innerH, padX, padY) {
+  const maxIndex = points.length - 1;
+  const upper = points
+    .map((point, index) => {
+      const x = padX + (innerW * index) / maxIndex;
+      const normalized = Math.max(0, Math.min(1, point[key] / Math.max(0.001, scaleMax)));
+      const y = padY + innerH - normalized * innerH;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+  const baseEnd = `${(padX + innerW).toFixed(2)} ${(padY + innerH).toFixed(2)}`;
+  const baseStart = `${padX.toFixed(2)} ${(padY + innerH).toFixed(2)}`;
+  return `${upper} L${baseEnd} L${baseStart} Z`;
+}
+
 function seriesPoint(points, index, key, innerW, innerH, padX, padY) {
   const maxIndex = points.length - 1;
   const point = points[index];
   return {
     x: +(padX + (innerW * index) / maxIndex).toFixed(2),
     y: +(padY + innerH - point[key] * innerH).toFixed(2),
+  };
+}
+
+function seriesPointScaled(points, index, key, scaleMax, innerW, innerH, padX, padY) {
+  const maxIndex = points.length - 1;
+  const point = points[index];
+  const normalized = Math.max(0, Math.min(1, point[key] / Math.max(0.001, scaleMax)));
+  return {
+    x: +(padX + (innerW * index) / maxIndex).toFixed(2),
+    y: +(padY + innerH - normalized * innerH).toFixed(2),
   };
 }
 
@@ -1015,6 +1072,12 @@ function rumorClusterSvg(data) {
     [340, 48],
     [336, 102],
     [264, 32],
+    [250, 66],
+    [274, 128],
+    [324, 122],
+    [350, 76],
+    [300, 22],
+    [246, 114],
   ];
   const links = [
     [0, 1],
@@ -1032,9 +1095,21 @@ function rumorClusterSvg(data) {
     [11, 1],
     [0, 3],
     [3, 10],
+    [12, 0],
+    [12, 6],
+    [13, 5],
+    [13, 6],
+    [14, 4],
+    [14, 10],
+    [15, 3],
+    [15, 9],
+    [16, 2],
+    [16, 9],
+    [17, 6],
+    [17, 13],
   ];
-  const infected = Math.min(nodes.length, Math.max(1, Math.round((data.currentI / 1000) * nodes.length)));
-  const resolved = Math.min(nodes.length - infected, Math.round((data.currentR / 1000) * nodes.length));
+  const infected = Math.min(nodes.length, Math.max(1, Math.round((data.currentI / 1000) * nodes.length * 1.35)));
+  const resolved = Math.min(nodes.length - infected, Math.round((data.currentR / 1000) * nodes.length * 1.15));
   const edges = links
     .map(([a, b]) => {
       const from = nodes[a];
