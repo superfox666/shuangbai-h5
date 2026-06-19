@@ -29,6 +29,53 @@ const tasks = [
   },
 ];
 
+const PERSONA_STORAGE_KEY = "persona";
+
+const PERSONAS = [
+  {
+    id: "youth",
+    name: "青少年 / 大学生",
+    code: "P-01",
+    pain: "短视频热梗、校园群聊和扫码领福利最容易把判断时间压缩掉。",
+    route: "重点训练：先看来源，再找证据。",
+  },
+  {
+    id: "farmer",
+    name: "农民",
+    code: "P-02",
+    pain: "农资补贴、助农项目和乡镇群消息需要更清楚的核验路径。",
+    route: "重点训练：陌生链接与验证码风险。",
+  },
+  {
+    id: "worker",
+    name: "产业工人",
+    code: "P-03",
+    pain: "排班、招聘、补贴和工厂群通知里，谣言与仿冒通知常混在一起。",
+    route: "重点训练：慢转发和传播抑制。",
+  },
+  {
+    id: "elder",
+    name: "老年人",
+    code: "P-04",
+    pain: "养老金、健康讲座和亲友转发内容，最需要低门槛识别口诀。",
+    route: "重点训练：防诈骗、辨谣言、少授权。",
+  },
+  {
+    id: "civil",
+    name: "领导干部 / 公务员",
+    code: "P-05",
+    pain: "会议通知、紧急任务和仿冒上级语音视频，需要来源链条核验。",
+    route: "重点训练：深伪线索与权威来源。",
+  },
+  {
+    id: "all",
+    name: "全部体验",
+    code: "P-00",
+    pain: "不限定身份，按全民科普路线完整走完四个 AI 识伪实验。",
+    route: "推荐路线：覆盖五类人群的完整实验。",
+  },
+];
+
 const iconPaths = {
   link: "./assets/icons/link.svg",
   scan: "./assets/icons/scan.svg",
@@ -223,8 +270,22 @@ const sourceItems = [
   },
 ];
 
+function readPersona() {
+  try {
+    const saved = sessionStorage.getItem(PERSONA_STORAGE_KEY);
+    return PERSONAS.some((persona) => persona.id === saved) ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function selectedPersona() {
+  return PERSONAS.find((persona) => persona.id === state.persona) || PERSONAS.find((persona) => persona.id === "all");
+}
+
 const state = {
   screen: "home",
+  persona: readPersona(),
   found: {
     phishing: new Set(),
     deepfake: new Set(),
@@ -258,7 +319,7 @@ const experimentLog = document.querySelector("#experimentLog");
 const mapButton = document.querySelector("#mapButton");
 const logToggle = document.querySelector("#logToggle");
 
-mapButton.addEventListener("click", () => render("map"));
+mapButton.addEventListener("click", () => render(state.persona ? "map" : "persona"));
 logToggle?.addEventListener("click", () => {
   state.logExpanded = !state.logExpanded;
   logToggle.setAttribute("aria-expanded", String(state.logExpanded));
@@ -277,6 +338,10 @@ function render(nextScreen = state.screen) {
 
   if (nextScreen === "home") {
     renderHome();
+    return;
+  }
+  if (nextScreen === "persona") {
+    renderPersona();
     return;
   }
   if (nextScreen === "map") {
@@ -327,12 +392,21 @@ function updateChrome() {
     sources: "引用来源",
     about: "关于作品",
     map: "任务地图",
+    persona: "角色选择",
     home: "准备进入",
   };
   stepTitle.textContent = current ? current.title : titles[state.screen] || "准备进入";
+  const entryOrders = {
+    home: "入口 00 / 02",
+    persona: "入口 01 / 02",
+    map: "实验 00 / 04",
+    report: "报告 / 04",
+    sources: "资料 / 04",
+    about: "说明 / 04",
+  };
   stepOrder.textContent = current
     ? `实验 ${String(tasks.findIndex((task) => task.id === current.id) + 1).padStart(2, "0")} / 04`
-    : "实验 00 / 04";
+    : entryOrders[state.screen] || "实验 00 / 04";
 
   sideSteps.innerHTML = tasks
     .map((task, index) => {
@@ -361,87 +435,133 @@ function setScreen(html) {
 
 function renderHome() {
   setScreen(`
-    <section class="hero">
+    <section class="hero lab-cover">
       <div class="hero-grid">
         <div class="hero-copy">
-          <div class="hero-headline-row">
-            <div class="hero-headline-copy">
-              <div class="hero-mark">${icon("lab")}</div>
-              <div>
-                <p class="eyebrow">AI 时代的信息识别科普</p>
-                <h2>智辨AI</h2>
-              </div>
-            </div>
-            <div class="hero-inline-scene">
-              <img
-                src="./assets/generated/hero-lab-scene.png?v=20260611b"
-                alt="识伪实验室概念图"
-                loading="eager"
-                decoding="sync"
-                fetchpriority="high"
-              >
+          <div class="lab-system-strip" aria-label="作品定位">
+            <span>JIANGHUAI AI FORENSIC LAB</span>
+            <span>H5 INTERACTIVE</span>
+          </div>
+          <div class="hero-headline-copy">
+            <div class="hero-mark">${icon("lab")}</div>
+            <div>
+              <p class="eyebrow">数字科普 · H5 互动 · 双百大赛 2026</p>
+              <h2>江淮智辨 AI</h2>
             </div>
           </div>
-          <p class="lead">这是一间 5 到 8 分钟就能走完的识伪实验室。你会依次完成钓鱼信息、深度伪造、谣言传播和隐私授权 4 个实验，最后拿到一份匿名识伪能力报告。</p>
-          <div class="tag-row" aria-label="能力标签">
-            <span class="tag">看来源</span>
-            <span class="tag">找证据</span>
-            <span class="tag">慢转发</span>
-            <span class="tag">少授权</span>
+          <p class="hero-subtitle">面向五类人群的 AI 时代科普互动实验室</p>
+          <p class="lead">以江淮场景为入口，把钓鱼信息、深度伪造、谣言传播和隐私授权风险拆成 4 个可操作实验，显式呼应“科创兴皖、科普育人”。</p>
+          <div class="tag-row lab-theme-row" aria-label="主题标签">
+            <span class="tag">科创兴皖</span>
+            <span class="tag">科普育人</span>
+            <span class="tag">五类人群</span>
+            <span class="tag">江淮防伪</span>
           </div>
           <div class="hero-facts">
             <article class="fact-card">
-              <strong>4 个实验</strong>
-              <p>每个实验只讲一个关键判断方法。</p>
+              <strong>4 个实验剧场</strong>
+              <p>来源、证据、传播、授权四条判断链。</p>
             </article>
             <article class="fact-card">
-              <strong>3 类高频风险</strong>
-              <p>群聊转发、AI 画面、App 权限。</p>
+              <strong>5 类重点人群</strong>
+              <p>青少年、农民、产业工人、老年人、干部公务员。</p>
             </article>
             <article class="fact-card">
-              <strong>1 份报告</strong>
-              <p>最后得到可截图的识伪能力总结。</p>
+              <strong>1 张通行证</strong>
+              <p>最后生成匿名的江淮防伪能力报告。</p>
             </article>
           </div>
           <div class="hero-note">
-            <strong>30 秒内你会知道：</strong>
-            <p>我们不是在做网页 PPT，而是在做一个能让普通用户“先判断、再理解、再带走方法”的交互式科普实验室。</p>
+            <strong>体验路径：</strong>
+            <p>先选择你的身份，再进入四个实验；不采集真实身份，不上传个人数据，只在本机保存本次角色选择。</p>
           </div>
           <div class="button-row">
-            <button class="primary-button" type="button" data-nav="map">进入实验室</button>
+            <button class="primary-button" type="button" data-nav="persona">进入实验室</button>
             <button class="secondary-button" type="button" data-nav="about">先看作品结构</button>
           </div>
         </div>
-        <aside class="hero-visual">
-          <p class="eyebrow">实验预览</p>
-          <div class="hero-preview-grid">
-            ${tasks
-              .map(
-                (task, index) => `
-              <article class="preview-card preview-card-${task.id}">
-                <span class="preview-icon">${icon(task.icon)}</span>
-                <div>
-                  <p class="preview-index">0${index + 1}</p>
-                  <h3>${task.title}</h3>
-                  <p>${task.short}</p>
-                </div>
-              </article>
-            `
-              )
-              .join("")}
+        <aside class="hero-visual lab-dashboard" aria-label="实验室操作仪表板">
+          <div class="dashboard-head">
+            <p class="eyebrow">LIVE DASHBOARD</p>
+            <span class="status-pill">RUNNING</span>
           </div>
-          <div class="hero-visual-foot">
-            <img class="hero-figure" src="./assets/illustrations/deepfake-figure.svg" alt="" aria-hidden="true">
-            <div class="hero-visual-copy">
-              <strong>最后你会得到什么？</strong>
-              <p>一份包含来源核验、证据观察、传播抑制、隐私保护 4 个维度的识伪能力报告。</p>
-            </div>
+          <div class="dashboard-grid">
+            <article>
+              <span>completion</span>
+              <strong>${state.completed.size}/4</strong>
+            </article>
+            <article>
+              <span>risk-detected</span>
+              <strong>${state.found.phishing.size + state.found.deepfake.size}</strong>
+            </article>
+            <article>
+              <span>experiments</span>
+              <strong>04</strong>
+            </article>
+            <article>
+              <span>time-elapsed</span>
+              <strong>05-08m</strong>
+            </article>
+          </div>
+          <div class="lab-orbit" aria-hidden="true">
+            <span class="orbit-node orbit-node-a"></span>
+            <span class="orbit-node orbit-node-b"></span>
+            <span class="orbit-node orbit-node-c"></span>
+            <span class="orbit-line orbit-line-a"></span>
+            <span class="orbit-line orbit-line-b"></span>
+          </div>
+          <div class="lab-console" aria-label="运行日志摘要">
+            <p><span>SYS</span> 初始化江淮防伪实验协议</p>
+            <p><span>USR</span> 等待五类人群角色入口</p>
+            <p><span>CHK</span> 科创兴皖 / 科普育人主题命中</p>
           </div>
         </aside>
       </div>
       <div class="detail-banner">
-        <span>适合谁：高校学生 / 青少年 / 社区公众</span>
-        <span>适合场景：群聊转发 / AI 视频辨识 / App 授权判断</span>
+        <span>适合谁：青少年 / 农民 / 产业工人 / 老年人 / 领导干部及公务员</span>
+        <span>适合场景：群聊转发 / AI 视频辨识 / App 授权判断 / 公共服务通知</span>
+      </div>
+    </section>
+  `);
+}
+
+function renderPersona() {
+  const current = selectedPersona();
+  setScreen(`
+    <section class="persona-screen">
+      <div class="persona-intro">
+        <p class="eyebrow">S0.5 PERSONA GATE</p>
+        <h2 class="section-title">你今天以谁的身份进入实验室？</h2>
+        <p class="lead">选择一个江淮场景身份，后续实验会按五类重点人群调整开场语境；也可以直接选择“全部体验”。</p>
+      </div>
+      <div class="persona-entry-panel">
+        <div class="persona-entry-art" aria-hidden="true">
+          <span class="persona-scanline"></span>
+          <span class="persona-map-dot dot-a"></span>
+          <span class="persona-map-dot dot-b"></span>
+          <span class="persona-map-dot dot-c"></span>
+          <strong>FIVE PUBLIC GROUPS</strong>
+          <p>Jianghuai AI Forensic Pass</p>
+        </div>
+        <div class="persona-grid">
+          ${PERSONAS.map(
+            (persona) => `
+            <button class="persona-card ${current.id === persona.id ? "is-active" : ""}" type="button" data-persona="${persona.id}" aria-pressed="${current.id === persona.id}">
+              <span class="persona-code">${persona.code}</span>
+              <span class="persona-avatar persona-avatar-${persona.id}" aria-hidden="true"></span>
+              <span class="persona-copy">
+                <strong>${persona.name}</strong>
+                <span>${persona.pain}</span>
+                <em>${persona.route}</em>
+              </span>
+            </button>
+          `
+          ).join("")}
+        </div>
+      </div>
+      <div class="persona-footer">
+        <button class="secondary-button persona-skip" type="button" data-persona="all">不选直接体验</button>
+        <p>仅写入 <code>sessionStorage.persona</code>，关闭页面后失效；作品不采集姓名、学校、手机号等真实身份。</p>
       </div>
     </section>
   `);
@@ -1554,6 +1674,20 @@ function exportPoster() {
 }
 
 screen.addEventListener("click", (event) => {
+  const personaButton = event.target.closest("[data-persona]");
+  if (personaButton) {
+    const personaId = personaButton.dataset.persona;
+    state.persona = PERSONAS.some((persona) => persona.id === personaId) ? personaId : "all";
+    try {
+      sessionStorage.setItem(PERSONA_STORAGE_KEY, state.persona);
+    } catch {
+      // sessionStorage can be unavailable in hardened browsers; the in-memory state still works.
+    }
+    addLog("角色", `选择 ${selectedPersona().name} 路线。`);
+    render("map");
+    return;
+  }
+
   const nav = event.target.closest("[data-nav]");
   if (nav) {
     addLog(
@@ -1561,6 +1695,8 @@ screen.addEventListener("click", (event) => {
       `切换到${
         nav.dataset.nav === "map"
           ? "任务地图"
+          : nav.dataset.nav === "persona"
+          ? "角色选择"
           : nav.dataset.nav === "sources"
           ? "引用来源"
           : nav.dataset.nav === "about"
