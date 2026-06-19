@@ -1502,6 +1502,68 @@ p {
   gap: 12px;
 }
 
+.phishing-lab {
+  position: relative;
+  isolation: isolate;
+}
+
+.phishing-lab::before {
+  content: "";
+  position: absolute;
+  inset: 72px -14px auto auto;
+  z-index: -1;
+  width: min(70%, 520px);
+  height: 340px;
+  border: 1px solid oklch(72% 0.18 165 / .12);
+  border-radius: var(--r-4);
+  background:
+    linear-gradient(180deg, oklch(5% 0.012 250 / .38), oklch(5% 0.012 250 / .72)),
+    url("./assets/generated/jianghuai-village-phish-r3.webp") center / cover,
+    linear-gradient(135deg, transparent 0 38%, oklch(72% 0.18 165 / .1) 39% 40%, transparent 41%),
+    radial-gradient(circle at 62% 42%, oklch(78% 0.15 80 / .12), transparent 30%),
+    radial-gradient(circle at 34% 72%, oklch(72% 0.18 165 / .1), transparent 28%);
+  mix-blend-mode: screen;
+  opacity: .16;
+}
+
+.terminal-window {
+  overflow: hidden;
+  border: var(--bd-soft);
+  border-radius: var(--r-2);
+  background:
+    linear-gradient(180deg, oklch(5% 0.012 250 / .88), oklch(10% 0.018 250 / .92)),
+    var(--bg-1);
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / .06);
+}
+
+.terminal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: var(--bd-soft);
+  background: oklch(100% 0 0 / .035);
+  color: var(--text-2);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.terminal-line {
+  min-height: 62px;
+  margin: 0;
+  overflow: hidden;
+  border-right: 2px solid var(--accent);
+  color: var(--accent);
+  padding: 14px 12px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  animation:
+    terminalTyping 1.2s steps(36, end) both,
+    terminalCaret 860ms step-end infinite;
+}
+
 .message-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -1520,6 +1582,25 @@ p {
   color: var(--color-risk);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.risk-token {
+  display: inline;
+  border: 1px dashed currentColor;
+  border-radius: 4px;
+  padding: 0 3px;
+}
+
+.risk-token.is-pulsing {
+  animation: riskPulse 300ms var(--ease-out) 2;
+}
+
+.risk-token.is-risk {
+  color: var(--danger);
+}
+
+.risk-token.is-warning {
+  color: var(--warn);
 }
 
 .message-highlight,
@@ -1612,6 +1693,71 @@ p {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.phishing-analysis-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.phishing-analysis-panel article {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  border: var(--bd-soft);
+  border-radius: var(--r-2);
+  background:
+    linear-gradient(180deg, oklch(18% 0.025 250 / .74), oklch(8% 0.018 250 / .74));
+  padding: 12px;
+}
+
+.phishing-analysis-panel article::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: calc(100% + 8px);
+  z-index: 3;
+  border: var(--bd-soft);
+  border-radius: var(--r-2);
+  background: oklch(5% 0.012 250 / .96);
+  color: var(--text-1);
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.phishing-analysis-panel article:hover::after,
+.phishing-analysis-panel article:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.phishing-analysis-panel span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.phishing-analysis-panel strong {
+  color: var(--text-1);
+  font-size: 18px;
+}
+
+.phishing-analysis-panel em {
+  color: var(--text-2);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.phishing-feedback .analysis-item:last-child {
+  grid-column: span 1;
 }
 
 .analysis-item {
@@ -2707,6 +2853,27 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+@keyframes terminalTyping {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+
+@keyframes terminalCaret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+@keyframes riskPulse {
+  50% {
+    box-shadow: 0 0 0 4px oklch(64% 0.18 25 / .14);
+  }
+}
+
 @keyframes shakeX {
   0%,
   100% {
@@ -2739,6 +2906,7 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .message-layout,
+  .phishing-analysis-panel,
   .persona-entry-panel,
   .rumor-visual-grid {
     grid-template-columns: 1fr;
@@ -2906,10 +3074,18 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .analysis-strip,
+  .phishing-feedback,
   .hotspot-legend,
   .report-insight-row,
   .network-stats {
     grid-template-columns: 1fr;
+  }
+
+  .terminal-line {
+    max-width: none;
+    white-space: normal;
+    border-right: 0;
+    animation: none;
   }
 
   .privacy-summary {

@@ -298,6 +298,7 @@ const state = {
   },
   privacy: {},
   completed: new Set(),
+  phishingPulse: false,
   logEntries: [
     {
       time: "14:00:00",
@@ -651,7 +652,65 @@ function progressForTask(id) {
   return 0;
 }
 
+function phishingScenario() {
+  const personaId = state.persona || "all";
+  const copy = {
+    farmer: {
+      label: "江淮乡镇 · 农资补贴核验",
+      time: "09:11",
+      intro: "农资补贴消息看起来像公共服务通知，但真正风险在“陌生链接 + 验证码”。",
+      message:
+        "【皖农字 0911】您的农资补贴待核验，30 分钟内未确认将退回。请打开 https://safe-check.example.cn/9x 并输入验证码。",
+      principle: "APWG 钓鱼报告强调，仿冒通知常把可信名义、短链接和凭证索要合并出现。",
+    },
+    elder: {
+      label: "江淮社区 · 养老金复核提醒",
+      time: "08:36",
+      intro: "养老金类消息要先回官方渠道核验，不通过陌生链接提交验证码。",
+      message:
+        "【皖老办 1234】养老金资格需重新核验，30 分钟内未完成将暂停发放。点击 https://safe-check.example.cn/9x 输入验证码。",
+      principle: "紧急倒计时会制造稀缺与恐惧，容易触发不核验就行动的社工反应。",
+    },
+    youth: {
+      label: "江淮校园 · 账号异常通知",
+      time: "09:42",
+      intro: "校园群里的账号通知要先看来源链条，再看是否索要一次性凭证。",
+      message:
+        "您的校园账号存在异常，30 分钟内未验证将冻结。请打开 https://safe-check.example.cn/9x 并输入验证码完成保护。",
+      principle: "账号冻结和领奖通知常用时间压力压缩判断，验证码不应交给陌生页面。",
+    },
+    worker: {
+      label: "江淮工厂 · 补贴名单确认",
+      time: "18:20",
+      intro: "补贴、排班、招聘类通知要回企业正式系统核验，不能从群链接直接提交验证码。",
+      message:
+        "【岗位补贴】您已进入本月补贴名单，30 分钟内未确认将视为放弃。打开 https://safe-check.example.cn/9x 输入验证码。",
+      principle: "群通知里出现“限时确认 + 短链接 + 验证码”，应按高风险处理。",
+    },
+    civil: {
+      label: "江淮政务 · 会议系统登录提醒",
+      time: "07:58",
+      intro: "政务或会议通知更要核验来源，不把验证码交给非正式入口。",
+      message:
+        "【会议系统】您的账号需紧急校验，30 分钟内未完成将影响材料接收。打开 https://safe-check.example.cn/9x 输入验证码。",
+      principle: "仿冒工作通知会利用责任压力催促操作，核验渠道比语气更关键。",
+    },
+    all: {
+      label: "通用场景 · 账号异常通知",
+      time: "09:42",
+      intro: "先找“来源链条”和“动作要求”。点击你认为真正危险的线索。",
+      message:
+        "您的校园账号存在异常，30 分钟内未验证将冻结。请打开 https://safe-check.example.cn/9x 并输入验证码完成保护。",
+      principle: "APWG / 社工研究都提示：可信名义、紧急压力和凭证索要叠加时，应先停止操作。",
+    },
+  };
+  return copy[personaId] || copy.all;
+}
+
 function renderPhishing() {
+  const scenario = phishingScenario();
+  const phishingScore = Math.max(0, Math.min(100, Math.round((state.found.phishing.size / 3) * 100 - state.missed.size * 8)));
+  const pulseClass = state.phishingPulse ? " is-pulsing" : "";
   const signalCards = [
     {
       id: "shortlink",
@@ -673,19 +732,24 @@ function renderPhishing() {
     },
   ];
   setScreen(`
-    <section>
-      <p class="eyebrow">实验一</p>
+    <section class="phishing-lab">
+      <p class="eyebrow">EXP-01 · JIANGHUAI TERMINAL</p>
       <h2 class="section-title">钓鱼信息诊断</h2>
-      <p class="lead">先找“来源链条”和“动作要求”。点击你认为真正危险的线索。</p>
+      <p class="lead">${scenario.intro}</p>
       <div class="scenario">
         <div class="phishing-board">
+          <div class="terminal-window" aria-label="终端模拟器">
+            <div class="terminal-head">
+              <span>${scenario.label}</span>
+              <span>${scenario.time}</span>
+            </div>
+            <p class="terminal-line" data-persona-line>${scenario.message}</p>
+          </div>
           <div class="message-layout">
             <div class="message-box phishing-phone">
-              <div class="message-head"><span>模拟通知</span><span>09:42</span></div>
+              <div class="message-head"><span>模拟通知</span><span>${scenario.time}</span></div>
               <p class="message-text">
-                您的校园账号存在异常，30 分钟内未验证将冻结。请打开
-                <strong class="message-link">https://safe-check.example.cn/9x</strong>
-                并输入验证码完成保护。
+                ${highlightPhishingMessage(scenario.message, pulseClass)}
               </p>
               <div class="message-highlight" aria-label="风险摘要">
                 <span class="message-chip is-risk">来源未验证</span>
@@ -697,18 +761,35 @@ function renderPhishing() {
               ${signalCards.map((item) => phishingSignalCard(item)).join("")}
             </div>
           </div>
-          <div class="analysis-strip">
+          <div class="phishing-analysis-panel" aria-label="三步分析面板">
+            <article tabindex="0" title="先确认发送者、链接域名和跳转入口是否可信。" data-tooltip="先确认发送者、链接域名和跳转入口是否可信。">
+              <span>来源</span>
+              <strong>陌生短链</strong>
+              <em>回官方 App / 官网核验</em>
+            </article>
+            <article tabindex="0" title="倒计时与冻结威胁会压缩判断时间。" data-tooltip="倒计时与冻结威胁会压缩判断时间。">
+              <span>时间压力</span>
+              <strong>30 分钟</strong>
+              <em>越催越慢，先停一步</em>
+            </article>
+            <article tabindex="0" title="验证码、密码、付款动作属于高风险请求。" data-tooltip="验证码、密码、付款动作属于高风险请求。">
+              <span>动作</span>
+              <strong>输入验证码</strong>
+              <em>一次性凭证不交给陌生页</em>
+            </article>
+          </div>
+          <div class="analysis-strip phishing-feedback">
             <div class="analysis-item">
-              <span>已命中真风险</span>
-              <strong>${state.found.phishing.size}/3</strong>
+              <span>本关得分</span>
+              <strong class="score-readout">${phishingScore}</strong>
             </div>
             <div class="analysis-item">
-              <span>误点非主风险</span>
+              <span>误点</span>
               <strong>${state.missed.size}</strong>
             </div>
             <div class="analysis-item">
-              <span>判断顺序</span>
-              <strong>先看来源，再看动作</strong>
+              <span>原理</span>
+              <strong>${scenario.principle}</strong>
             </div>
           </div>
         </div>
@@ -723,6 +804,16 @@ function renderPhishing() {
       </div>
     </section>
   `);
+}
+
+function highlightPhishingMessage(message, pulseClass = "") {
+  return message
+    .replace(/30 分钟/g, `<span class="risk-token is-warning${pulseClass}">30 分钟</span>`)
+    .replace(
+      /https:\/\/safe-check\.example\.cn\/9x/g,
+      `<strong class="message-link risk-token is-risk${pulseClass}">https://safe-check.example.cn/9x</strong>`
+    )
+    .replace(/验证码/g, `<span class="risk-token is-risk${pulseClass}">验证码</span>`);
 }
 
 function evidenceButton(group, item) {
@@ -1815,7 +1906,14 @@ function handleEvidence(group, id) {
       state.missed.add(id);
       addLog("实验1", `误把“${item.label}”当成主风险点。`);
     }
+    state.phishingPulse = true;
     renderPhishing();
+    window.setTimeout(() => {
+      if (state.screen === "phishing") {
+        state.phishingPulse = false;
+        renderPhishing();
+      }
+    }, 700);
     showExplain(item.label, item.explain);
     if (!item.good) {
       const btn = [...document.querySelectorAll(".evidence-button")].find((node) => node.textContent.includes(item.label));
