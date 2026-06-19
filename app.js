@@ -332,6 +332,8 @@ const sideSteps = document.querySelector("#sideSteps");
 const experimentLog = document.querySelector("#experimentLog");
 const mapButton = document.querySelector("#mapButton");
 const logToggle = document.querySelector("#logToggle");
+const reducedMotionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+let rumorUpdateFrame = 0;
 
 mapButton.addEventListener("click", () => render(state.persona ? "map" : "persona"));
 logToggle?.addEventListener("click", () => {
@@ -395,7 +397,12 @@ function updateChrome() {
   const completedCount = state.completed.size;
   const percent = Math.round((completedCount / tasks.length) * 100);
   progressValue.textContent = `${percent}%`;
-  progressBar.style.width = `${percent}%`;
+  progressBar.style.setProperty("--progress-scale", String(percent / 100));
+  progressRing.setAttribute("role", "progressbar");
+  progressRing.setAttribute("aria-label", `实验完成度 ${percent}%`);
+  progressRing.setAttribute("aria-valuemin", "0");
+  progressRing.setAttribute("aria-valuemax", "100");
+  progressRing.setAttribute("aria-valuenow", String(percent));
   progressRing.style.background = `conic-gradient(var(--color-accent) ${
     percent * 3.6
   }deg, var(--color-surface-muted) 0deg)`;
@@ -445,6 +452,22 @@ function updateChrome() {
 
 function setScreen(html) {
   screen.innerHTML = `<div class="screen-view">${html}</div>`;
+}
+
+function prefersReducedMotion() {
+  return Boolean(reducedMotionQuery?.matches);
+}
+
+function scheduleRumorViewUpdate() {
+  if (prefersReducedMotion()) {
+    updateRumorView();
+    return;
+  }
+  if (rumorUpdateFrame) return;
+  rumorUpdateFrame = window.requestAnimationFrame(() => {
+    rumorUpdateFrame = 0;
+    updateRumorView();
+  });
 }
 
 function renderHome() {
@@ -1108,7 +1131,7 @@ function applyRumorPreset(presetId) {
   state.rumor.authority = preset.authority;
   state.rumor.preset = presetId;
   addLog("SIR", `切换为${preset.label}预设。`);
-  updateRumorView();
+  scheduleRumorViewUpdate();
 }
 
 function renderRumor() {
@@ -1219,8 +1242,8 @@ function sliderRow(id, label, value) {
       <label for="${id}Range"><span class="equation-label">${label}</span><output id="${id}Output">${value}%</output></label>
       <div class="slider-shell" data-slider-shell="${id}">
         <div class="slider-rail" aria-hidden="true">
-          <span class="slider-fill" id="${id}Fill" style="width:${value}%"></span>
-          <span class="slider-thumb" id="${id}Thumb" style="left:calc(${value}% - 12px)"></span>
+          <span class="slider-fill" id="${id}Fill" style="--slider-scale:${value / 100}"></span>
+          <span class="slider-thumb" id="${id}Thumb" style="--slider-x:${value}%"></span>
         </div>
         <input id="${id}Range" class="slider-input" type="range" min="0" max="100" value="${value}" data-slider="${id}">
       </div>
@@ -1301,8 +1324,9 @@ function updateRumorSliderShell(id) {
   const thumb = document.querySelector(`#${id}Thumb`);
   const input = document.querySelector(`#${id}Range`);
   const value = state.rumor[id];
-  if (fill) fill.style.width = `${value}%`;
-  if (thumb) thumb.style.left = `calc(${value}% - 12px)`;
+  const scale = String(value / 100);
+  if (fill) fill.style.setProperty("--slider-scale", scale);
+  if (thumb) thumb.style.setProperty("--slider-x", `${value}%`);
   if (input && Number(input.value) !== value) input.value = String(value);
 }
 
@@ -2389,7 +2413,7 @@ screen.addEventListener("input", (event) => {
   if (slider) {
     state.rumor[slider.dataset.slider] = Number(slider.value);
     state.rumor.preset = "custom";
-    updateRumorView();
+    scheduleRumorViewUpdate();
     return;
   }
 
@@ -2397,7 +2421,7 @@ screen.addEventListener("input", (event) => {
   if (cityToggle) {
     state.rumor.cityMode = cityToggle.checked;
     addLog("SIR", state.rumor.cityMode ? "开启江淮某地市仿真标签。" : "关闭江淮某地市仿真标签。");
-    updateRumorView();
+    scheduleRumorViewUpdate();
     return;
   }
 
