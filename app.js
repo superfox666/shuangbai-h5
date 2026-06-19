@@ -1105,7 +1105,7 @@ function activeRumorPresetLabel() {
 }
 
 function rumorEquationHtml(data) {
-  return `dS/dt = -βSI <span>dI/dt = βSI - γI · dR/dt = γI · Rₑ = β / (γ + ψ) = ${data.reproduction.toFixed(
+  return `dS/dt = -βSI <span>dI/dt = βSI - (γ+ψ)I · dR/dt = (γ+ψ)I · Rₑ = β / (γ + ψ) = ${data.reproduction.toFixed(
     2
   )}</span>`;
 }
@@ -1225,8 +1225,8 @@ function renderRumor() {
         <div class="model-body">
           <p><strong>使用模型：</strong>SIR 变体，参数映射为 β 转发率、γ 核验率、ψ 权威澄清触达率。</p>
           <p><code>dS/dt = -βSI</code></p>
-          <p><code>dI/dt = βSI - γI</code></p>
-          <p><code>dR/dt = γI</code></p>
+          <p><code>dI/dt = βSI - (γ+ψ)I</code></p>
+          <p><code>dR/dt = (γ+ψ)I</code></p>
           <p><code>Rₑ = β / (γ + ψ)</code>，其中 ψ 表示平台、社区或权威渠道的澄清触达强度。</p>
           <p>数值方法：Euler，<code>dt = 0.01</code>，迭代 320 步。它用于科普示意，不用于现实预测。</p>
         </div>
