@@ -2443,6 +2443,88 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 16px;
 }
 
+.rumor-lab {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  isolation: isolate;
+}
+
+.rumor-lab::before {
+  content: "";
+  position: absolute;
+  inset: 76px -14px auto -14px;
+  height: 290px;
+  z-index: -1;
+  background: url("./assets/generated/anhui-rumor-network-r2.webp") center / cover no-repeat;
+  opacity: .045;
+  filter: saturate(1.2);
+  pointer-events: none;
+}
+
+.rumor-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  gap: 8px;
+  padding: 12px;
+  border: var(--bd-soft);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0%, oklch(72% 0.18 165 / .16), transparent 36%),
+    var(--surface-card);
+  box-shadow: var(--sh-1);
+}
+
+.rumor-brief-copy,
+.rumor-preset-readout {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rumor-brief span,
+.rumor-preset-readout span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rumor-brief strong {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rumor-preset-readout {
+  justify-items: end;
+  align-content: start;
+  text-align: right;
+}
+
+.rumor-preset-readout strong {
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+  font-variant-numeric: var(--numeric-readout);
+}
+
+.panel-title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.panel-title-row code {
+  min-width: 0;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: var(--numeric-readout);
+}
+
 .network-card {
   border: var(--bd-soft);
   border-radius: 12px;
@@ -2450,10 +2532,125 @@ input[type="range"]::-moz-range-thumb {
   padding: 10px;
 }
 
+.sir-chart-card,
+.rumor-map-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, oklch(15% 0.028 250 / .92), oklch(9% 0.02 250 / .96)),
+    var(--bg-1);
+}
+
+.sir-chart-card::after,
+.rumor-map-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -20% -44% -20%;
+  height: 110px;
+  background: radial-gradient(circle, oklch(72% 0.18 165 / .14), transparent 62%);
+  pointer-events: none;
+}
+
 .network-card svg {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.sir-chart-svg,
+.rumor-network-svg {
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / .04);
+}
+
+.rumor-control-deck {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: var(--bd-soft);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.preset-button {
+  min-height: 54px;
+  padding: 8px 6px;
+  border: var(--bd-soft);
+  border-radius: 12px;
+  background: var(--bg-1);
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.preset-button span,
+.preset-button small {
+  display: block;
+}
+
+.preset-button span {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.preset-button small {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-variant-numeric: var(--numeric-readout);
+}
+
+.preset-button.is-active {
+  border-color: oklch(72% 0.18 165 / .72);
+  background: linear-gradient(135deg, oklch(72% 0.18 165 / .18), oklch(70% 0.15 230 / .08));
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / .08);
+}
+
+.preset-button:active {
+  transform: translateY(1px);
+}
+
+.city-toggle {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px;
+  border-radius: 12px;
+  border: var(--bd-soft);
+  background: var(--bg-1);
+}
+
+.city-toggle input {
+  grid-row: 1 / span 2;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+}
+
+.city-toggle span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.city-toggle small {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .metric-grid {
@@ -2481,6 +2678,7 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 4px;
   font-family: var(--font-mono);
   font-size: 18px;
+  font-variant-numeric: var(--numeric-readout);
 }
 
 .chart-stage-card {
@@ -2533,6 +2731,59 @@ input[type="range"]::-moz-range-thumb {
   font-family: var(--font-mono);
   font-size: 24px;
   color: var(--color-text);
+  font-variant-numeric: var(--numeric-readout);
+}
+
+.rumor-lab .metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.rumor-lab .metric {
+  min-width: 0;
+  padding: 8px 6px;
+  border-radius: 10px;
+}
+
+.rumor-lab .metric span {
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.rumor-lab .metric strong {
+  font-size: 14px;
+}
+
+.rumor-lab .slider-group {
+  gap: 10px;
+  margin-top: 0;
+}
+
+.rumor-lab .slider-row {
+  padding: 10px;
+  border: var(--bd-soft);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.rumor-lab .slider-row label {
+  font-size: 13px;
+}
+
+.rumor-lab .slider-row output {
+  min-width: 42px;
+  text-align: right;
+  font-variant-numeric: var(--numeric-readout);
+}
+
+.rumor-lab .slider-note,
+.rumor-lab .slider-scale {
+  font-size: 10.5px;
+}
+
+.rumor-lab .model-card,
+.rumor-lab .explain-card {
+  border-radius: 14px;
 }
 
 .model-card {

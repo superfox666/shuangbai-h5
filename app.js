@@ -294,8 +294,10 @@ const state = {
   deepfakeLens: { x: 58, y: 44 },
   rumor: {
     share: 62,
-    delay: 55,
-    authority: 44,
+    delay: 44,
+    authority: 35,
+    preset: "medium",
+    cityMode: false,
   },
   privacy: {},
   completed: new Set(),
@@ -643,9 +645,10 @@ function progressForTask(id) {
   if (id === "rumor") {
     const changed =
       Math.abs(state.rumor.share - 62) +
-      Math.abs(state.rumor.delay - 55) +
-      Math.abs(state.rumor.authority - 44);
-    return Math.min(90, Math.round(changed * 1.8));
+      Math.abs(state.rumor.delay - 44) +
+      Math.abs(state.rumor.authority - 35);
+    const scenarioBoost = (state.rumor.preset && state.rumor.preset !== "medium" ? 16 : 0) + (state.rumor.cityMode ? 14 : 0);
+    return Math.min(90, Math.round(changed * 1.8 + scenarioBoost));
   }
   if (id === "privacy") {
     return Math.min(90, Object.keys(state.privacy).length * 22);
@@ -985,21 +988,145 @@ function deepfakeLegendItem(item) {
   `;
 }
 
+const rumorPresets = {
+  low: {
+    label: "低风险",
+    share: 24,
+    delay: 86,
+    authority: 82,
+    note: "低转发、快核验、澄清前置，传播链条会在早期收缩。",
+  },
+  medium: {
+    label: "中风险",
+    share: 62,
+    delay: 44,
+    authority: 35,
+    note: "群聊转发开始超过核验速度，需要同步压低 β 并提高 γ/ψ。",
+  },
+  high: {
+    label: "高风险",
+    share: 94,
+    delay: 8,
+    authority: 5,
+    note: "高转发、低核验、澄清滞后，I(t) 峰值会显著抬升。",
+  },
+};
+
+function rumorScenario() {
+  const personaId = state.persona || "all";
+  const copy = {
+    worker: {
+      eyebrow: "EXP-03 · WORKSHOP SIR LAB",
+      title: "工厂裁员谣言传播推演",
+      lead:
+        "模拟江淮某产业园班组群：一条“下月集中裁员”的截图被连续转发。用 β、γ、ψ 看转发冲动、核验速度和澄清触达如何改变峰值。",
+      chips: ["班组群", "裁员谣言", "先核验再转发"],
+      scene: "工友群里，未经证实的排班截图比正式通知更快扩散。",
+    },
+    elder: {
+      eyebrow: "EXP-03 · COMMUNITY HEALTH SIR",
+      title: "健康谣言扩散推演",
+      lead:
+        "模拟江淮某社区家庭群：一条“偏方能快速治病”的短视频被转发。看 Rₑ 何时大于 1，理解为什么慢一步转发也是科普行动。",
+      chips: ["家庭群", "健康谣言", "等权威来源"],
+      scene: "亲友转发看似善意，但缺少来源链时会抬高传播峰值。",
+    },
+    farmer: {
+      eyebrow: "EXP-03 · TOWNSHIP SIR LAB",
+      title: "农资补贴谣言传播推演",
+      lead:
+        "模拟江淮某乡镇合作群：一条“补贴名额最后一天确认”的消息被扩散。调节参数，观察核验和澄清如何压低 I(t)。",
+      chips: ["乡镇群", "补贴谣言", "回官方入口"],
+      scene: "补贴、农资、项目名额类消息要先回正式渠道核验。",
+    },
+    youth: {
+      eyebrow: "EXP-03 · CAMPUS SIR LAB",
+      title: "校园群聊谣言传播推演",
+      lead:
+        "模拟江淮某高校群聊：一条“AI 伪科普截图”被连续转发。用 S/I/R 曲线看转发前多核验一步如何降低峰值。",
+      chips: ["校园群聊", "AI 伪科普", "来源链优先"],
+      scene: "群聊里的截图越像科普，越需要追溯原始出处和权威解释。",
+    },
+    civil: {
+      eyebrow: "EXP-03 · DUTY GROUP SIR LAB",
+      title: "工作群误传风险推演",
+      lead:
+        "模拟江淮某工作群：一段未经核验的视频被当成紧急通知扩散。观察权威澄清触达率 ψ 如何改变 Rₑ。",
+      chips: ["工作群", "伪通知误传", "来源链核验"],
+      scene: "越像正式任务，越要核验发布链条，不能只看口吻。",
+    },
+    all: {
+      eyebrow: "EXP-03 · JIANGHUAI SIR LAB",
+      title: "谣言传播 SIR 模拟器",
+      lead:
+        "把公共传播场景翻译成 SIR 模型：S 是未接触或未相信的人，I 是正在传播的人，R 是停止传播或已澄清的人。",
+      chips: ["江淮某地市", "三层传播网络", "Rₑ 实时读数"],
+      scene: "城市、行业、社区三层节点共同决定一条谣言的传播峰值。",
+    },
+  };
+  return copy[personaId] || copy.all;
+}
+
+function activeRumorPresetLabel() {
+  return rumorPresets[state.rumor.preset]?.label || "自定义";
+}
+
+function rumorEquationHtml(data) {
+  return `dS/dt = -βSI <span>dI/dt = βSI - γI · dR/dt = γI · Rₑ = β / (γ + ψ) = ${data.reproduction.toFixed(
+    2
+  )}</span>`;
+}
+
+function rumorPresetButtons() {
+  return Object.entries(rumorPresets)
+    .map(
+      ([id, preset]) => `
+        <button class="preset-button ${state.rumor.preset === id ? "is-active" : ""}" type="button" data-rumor-preset="${id}">
+          <span>${preset.label}</span>
+          <small>β${preset.share} · γ${preset.delay} · ψ${preset.authority}</small>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function applyRumorPreset(presetId) {
+  const preset = rumorPresets[presetId];
+  if (!preset) return;
+  state.rumor.share = preset.share;
+  state.rumor.delay = preset.delay;
+  state.rumor.authority = preset.authority;
+  state.rumor.preset = presetId;
+  addLog("SIR", `切换为${preset.label}预设。`);
+  updateRumorView();
+}
+
 function renderRumor() {
   const data = calcRumor();
+  const scenario = rumorScenario();
   setScreen(`
-    <section>
-      <p class="eyebrow">实验三</p>
-      <h2 class="section-title">谣言传播模拟器</h2>
-      <p class="lead">这里不再用凑系数。我们把公众转发场景翻译成一个可交互的 SIR 传播模型。</p>
-      <div class="equation-strip" id="equationStrip">dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} γ=${data.gamma.toFixed(
-    2
-  )} ψ=${data.psi.toFixed(2)} | S=${Math.round(data.currentS)} I=${Math.round(data.currentI)} R=${Math.round(
-    data.currentR
-  )}]</span></div>
+    <section class="rumor-lab">
+      <p class="eyebrow">${scenario.eyebrow}</p>
+      <h2 class="section-title">${scenario.title}</h2>
+      <p class="lead" data-persona-line>${scenario.lead}</p>
+      <div class="rumor-brief">
+        <div class="rumor-brief-copy">
+          <span>当前剧本</span>
+          <strong>${scenario.scene}</strong>
+        </div>
+        <div class="rumor-preset-readout">
+          <span>预设</span>
+          <strong id="presetMetric">${activeRumorPresetLabel()}</strong>
+        </div>
+      </div>
+      <div class="equation-strip" id="equationStrip">${rumorEquationHtml(data)}</div>
       <div class="rumor-scenario-tags" id="rumorTags">${rumorTagsHtml(data)}</div>
       <div class="rumor-visual-grid">
-        <div class="network-card">
+        <div class="network-card sir-chart-card">
+          <div class="panel-title-row">
+            <span>S/I/R 时序曲线</span>
+            <code>X(t/天) · Y(占比 %)</code>
+          </div>
           <div id="rumorChart">${curveSvg(data)}</div>
           <div class="metric-grid">
             <div class="metric"><span>I 峰值占比</span><strong id="peakMetric">${data.peakInfected.toFixed(1)}%</strong></div>
@@ -1008,6 +1135,13 @@ function renderRumor() {
             <div class="metric"><span>风险等级</span><strong id="riskMetric">${data.level}</strong></div>
           </div>
         </div>
+        <aside class="network-card rumor-map-card">
+          <div class="panel-title-row">
+            <span>三层节点图</span>
+            <code>省域 · 城市/行业 · 乡镇/群组</code>
+          </div>
+          <div id="rumorNetwork">${rumorClusterSvg(data)}</div>
+        </aside>
         <aside class="chart-stage-card">
           <p class="side-label">传播态势</p>
           <h3 id="stageTitle">${data.stageTitle}</h3>
@@ -1036,6 +1170,14 @@ function renderRumor() {
           </div>
         </aside>
       </div>
+      <div class="rumor-control-deck">
+        <div class="preset-row" id="rumorPresetButtons">${rumorPresetButtons()}</div>
+        <label class="city-toggle">
+          <input id="cityModeToggle" type="checkbox" data-rumor-city ${state.rumor.cityMode ? "checked" : ""}>
+          <span>江淮某地市仿真</span>
+          <small>勾选后 16 个匿名地市节点亮起：A 市 / B 市 / ...</small>
+        </label>
+      </div>
       <div class="slider-group">
         ${sliderRow("share", "β 转发率", state.rumor.share)}
         ${sliderRow("delay", "γ 核验/停止传播率", state.rumor.delay)}
@@ -1050,9 +1192,10 @@ function renderRumor() {
         <div class="model-body">
           <p><strong>使用模型：</strong>SIR 变体，参数映射为 β 转发率、γ 核验率、ψ 权威澄清触达率。</p>
           <p><code>dS/dt = -βSI</code></p>
-          <p><code>dI/dt = βSI - γI - ψI</code></p>
-          <p><code>dR/dt = (γ + ψ)I</code></p>
-          <p>数值方法：Euler，<code>dt = 0.01</code>，迭代 200 步。它用于科普示意，不用于现实预测。</p>
+          <p><code>dI/dt = βSI - γI</code></p>
+          <p><code>dR/dt = γI</code></p>
+          <p><code>Rₑ = β / (γ + ψ)</code>，其中 ψ 表示平台、社区或权威渠道的澄清触达强度。</p>
+          <p>数值方法：Euler，<code>dt = 0.01</code>，迭代 320 步。它用于科普示意，不用于现实预测。</p>
         </div>
       </details>
       <button class="primary-button" type="button" data-complete="rumor">结束本实验</button>
@@ -1092,6 +1235,10 @@ function updateRumorView() {
   const equation = document.querySelector("#equationStrip");
   const tags = document.querySelector("#rumorTags");
   const chart = document.querySelector("#rumorChart");
+  const network = document.querySelector("#rumorNetwork");
+  const presetMetric = document.querySelector("#presetMetric");
+  const presetButtons = document.querySelector("#rumorPresetButtons");
+  const cityToggle = document.querySelector("#cityModeToggle");
   const peak = document.querySelector("#peakMetric");
   const peakStep = document.querySelector("#peakStepMetric");
   const removed = document.querySelector("#removedMetric");
@@ -1116,12 +1263,14 @@ function updateRumorView() {
   updateRumorSliderShell("delay");
   updateRumorSliderShell("authority");
   if (equation) {
-    equation.innerHTML = `dS/dt = -β·S·I <span>[β=${data.beta.toFixed(2)} γ=${data.gamma.toFixed(2)} ψ=${data.psi.toFixed(
-      2
-    )} | S=${Math.round(data.currentS)} I=${Math.round(data.currentI)} R=${Math.round(data.currentR)}]</span>`;
+    equation.innerHTML = rumorEquationHtml(data);
   }
   if (tags) tags.innerHTML = rumorTagsHtml(data);
   if (chart) chart.innerHTML = curveSvg(data);
+  if (network) network.innerHTML = rumorClusterSvg(data);
+  if (presetMetric) presetMetric.textContent = activeRumorPresetLabel();
+  if (presetButtons) presetButtons.innerHTML = rumorPresetButtons();
+  if (cityToggle) cityToggle.checked = state.rumor.cityMode;
   if (peak) peak.textContent = `${data.peakInfected.toFixed(1)}%`;
   if (peakStep) peakStep.textContent = `t${data.peakStep}`;
   if (removed) removed.textContent = `${data.finalRemoved.toFixed(1)}%`;
@@ -1148,7 +1297,16 @@ function updateRumorSliderShell(id) {
 }
 
 function rumorTagsHtml(data) {
+  const scenario = rumorScenario();
   const chips = [
+    {
+      tone: "safe",
+      label: scenario.chips[0],
+    },
+    {
+      tone: state.rumor.cityMode ? "safe" : "neutral",
+      label: state.rumor.cityMode ? "16 个匿名地市节点已亮起" : "未启用地市标签",
+    },
     {
       tone: state.rumor.share > 68 ? "risk" : state.rumor.share < 40 ? "safe" : "neutral",
       label: state.rumor.share > 68 ? "高转发冲动" : state.rumor.share < 40 ? "用户转发谨慎" : "转发意愿中等",
@@ -1165,6 +1323,10 @@ function rumorTagsHtml(data) {
     {
       tone: data.reproduction > 1 ? "risk" : "safe",
       label: `即时 Rₑ = ${data.reproduction.toFixed(2)}`,
+    },
+    {
+      tone: data.level === "高" ? "risk" : data.level === "中" ? "warning" : "safe",
+      label: `${data.level}风险峰值`,
     },
   ];
   return chips.map((item) => `<span class="scenario-chip is-${item.tone}">${item.label}</span>`).join("");
@@ -1188,7 +1350,7 @@ function calcRumor() {
   let i = 0.02;
   let r = 0;
   const dt = 0.01;
-  const steps = 200;
+  const steps = 320;
   const points = [];
   let peakInfected = i;
   let peakStep = 0;
@@ -1222,7 +1384,12 @@ function calcRumor() {
   const effectiveSpread = beta - (gamma + psi);
   const reproduction = beta / Math.max(0.08, gamma + psi);
   const peakPct = peakInfected * 100;
-  const level = peakPct > 34 || effectiveSpread > 0.18 ? "高" : peakPct > 18 || effectiveSpread > 0 ? "中" : "低";
+  const level =
+    peakPct > 24 || reproduction > 2.2 || effectiveSpread > 0.42
+      ? "高"
+      : peakPct > 2.35 || reproduction > 1 || effectiveSpread > 0
+      ? "中"
+      : "低";
   const catchup =
     catchUpStep === null ? "较慢" : catchUpStep < 80 ? "较快" : catchUpStep < 140 ? "中等" : "偏慢";
   const stageTitle =
@@ -1241,12 +1408,14 @@ function calcRumor() {
       : stageTitle === "拉锯压制区"
       ? "这时最有效的是继续降低转发冲动，并把核验动作前置。只要公众多停一步，峰值就有机会继续下压。"
       : "当前传播已经被明显约束，但仍要保持来源核验和延迟转发。好的信息习惯不是一次操作，而是长期稳定执行。";
+  const presetNote = rumorPresets[state.rumor.preset]?.note || "当前为手动调参状态，用滑块观察 β、γ、ψ 对峰值和 Rₑ 的共同影响。";
 
   return {
     beta,
     gamma,
     psi,
     points,
+    totalSteps: steps,
     peakInfected: peakPct,
     peakStep,
     finalRemoved,
@@ -1256,9 +1425,11 @@ function calcRumor() {
     reproduction,
     level,
     stageTitle,
-    stageCopy,
+    stageCopy: `${stageCopy} ${presetNote}`,
     recommendationTitle,
-    recommendation,
+    recommendation: `${recommendation} 当前 ${activeRumorPresetLabel()}：I 峰值 ${peakPct.toFixed(1)}%，Rₑ ${
+      reproduction > 1 ? "大于" : "小于"
+    } 1。`,
     messageTitle: stageTitle,
     message: stageCopy,
   };
@@ -1274,59 +1445,67 @@ function clamp01(value) {
 
 function curveSvg(data) {
   const width = 360;
-  const height = 236;
-  const chartX = 18;
-  const chartY = 60;
-  const chartW = 214;
-  const chartH = 126;
+  const height = 248;
+  const chartX = 44;
+  const chartY = 26;
+  const chartW = 286;
+  const chartH = 160;
   const bottomY = chartY + chartH;
-  const focusMax = Math.max(0.06, ...data.points.map((point) => Math.max(point.i, point.r))) * 1.1;
-  const sBandY = 22;
-  const sBandH = 20;
-  const sLine = pathForSeriesScaled(data.points, "s", 1, chartW, sBandH, chartX, sBandY, "#c7ddd4", 0.88);
-  const iLine = pathForSeriesScaled(data.points, "i", focusMax, chartW, chartH, chartX, chartY, "#c84735");
-  const rLine = pathForSeriesScaled(data.points, "r", focusMax, chartW, chartH, chartX, chartY, "#0f8f76");
-  const infectedArea = areaPathForSeriesScaled(data.points, "i", focusMax, chartW, chartH, chartX, chartY);
-  const peakPoint = seriesPointScaled(data.points, data.peakStep, "i", focusMax, chartW, chartH, chartX, chartY);
-  const finalPoint = seriesPointScaled(data.points, data.points.length - 1, "i", focusMax, chartW, chartH, chartX, chartY);
-  const grid = [0.25, 0.5, 0.75].map((ratio) => {
+  const sLine = pathForSeriesScaled(data.points, "s", 1, chartW, chartH, chartX, chartY, "#62d4f5");
+  const iLine = pathForSeriesScaled(data.points, "i", 1, chartW, chartH, chartX, chartY, "#ff654f");
+  const rLine = pathForSeriesScaled(data.points, "r", 1, chartW, chartH, chartX, chartY, "#6de6a6");
+  const infectedArea = areaPathForSeriesScaled(data.points, "i", 1, chartW, chartH, chartX, chartY);
+  const peakPoint = seriesPointScaled(data.points, data.peakStep, "i", 1, chartW, chartH, chartX, chartY);
+  const finalPoint = seriesPointScaled(data.points, data.points.length - 1, "i", 1, chartW, chartH, chartX, chartY);
+  const grid = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
     const y = chartY + chartH * ratio;
-    return `<line x1="${chartX}" y1="${y}" x2="${chartX + chartW}" y2="${y}" stroke="#e6edea" stroke-width="1.5" stroke-dasharray="4 6"></line>`;
+    return `<g>
+      <line x1="${chartX}" y1="${y}" x2="${chartX + chartW}" y2="${y}" stroke="rgba(255,255,255,.1)" stroke-width="1"></line>
+      <text x="${chartX - 10}" y="${y + 4}" text-anchor="end" fill="rgba(230,248,242,.58)" font-size="10">${Math.round(
+        (1 - ratio) * 100
+      )}%</text>
+    </g>`;
   });
-  const cluster = rumorClusterSvg(data);
+  const totalSteps = data.totalSteps || data.points.length - 1;
+  const dayTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+    const step = Math.round(totalSteps * ratio);
+    const x = chartX + chartW * ratio;
+    return `<g>
+      <line x1="${x}" y1="${chartY}" x2="${x}" y2="${bottomY}" stroke="rgba(255,255,255,.055)" stroke-width="1"></line>
+      <text x="${x}" y="${bottomY + 17}" text-anchor="middle" fill="rgba(230,248,242,.54)" font-size="10">${step}</text>
+    </g>`;
+  });
   return `
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="SIR 传播曲线示意">
+    <svg class="sir-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="SIR 传播曲线，X 轴为 t 天，Y 轴为占比百分比">
       <defs>
         <linearGradient id="infectedFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(200,71,53,.34)"/>
-          <stop offset="100%" stop-color="rgba(200,71,53,0)"/>
+          <stop offset="0%" stop-color="rgba(255,101,79,.38)"/>
+          <stop offset="100%" stop-color="rgba(255,101,79,0)"/>
         </linearGradient>
       </defs>
-      <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="18" fill="rgba(255,255,255,0.8)" stroke="#d8e1dc"/>
-      <rect x="${chartX}" y="${chartY}" width="${chartW}" height="${chartH}" rx="14" fill="rgba(255,255,255,0.72)" stroke="#d8e1dc"/>
-      <rect x="${chartX}" y="${sBandY}" width="${chartW}" height="${sBandH}" rx="10" fill="rgba(255,255,255,0.72)" stroke="#d8e1dc"/>
+      <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="18" fill="rgba(5,9,14,.72)" stroke="rgba(255,255,255,.12)"/>
+      <rect x="${chartX}" y="${chartY}" width="${chartW}" height="${chartH}" rx="12" fill="rgba(255,255,255,.025)" stroke="rgba(255,255,255,.12)"/>
       ${grid.join("")}
-      <line x1="${chartX}" y1="${bottomY}" x2="${chartX + chartW}" y2="${bottomY}" stroke="#d8e1dc" stroke-width="2"/>
-      <line x1="${chartX}" y1="${chartY}" x2="${chartX}" y2="${bottomY}" stroke="#d8e1dc" stroke-width="2"/>
+      ${dayTicks.join("")}
+      <line x1="${chartX}" y1="${bottomY}" x2="${chartX + chartW}" y2="${bottomY}" stroke="rgba(230,248,242,.36)" stroke-width="1.5"/>
+      <line x1="${chartX}" y1="${chartY}" x2="${chartX}" y2="${bottomY}" stroke="rgba(230,248,242,.36)" stroke-width="1.5"/>
+      <text x="${chartX + chartW / 2}" y="${height - 13}" text-anchor="middle" fill="rgba(230,248,242,.62)" font-size="11">X(t/天)</text>
+      <text x="16" y="${chartY + chartH / 2}" text-anchor="middle" fill="rgba(230,248,242,.62)" font-size="11" transform="rotate(-90 16 ${chartY + chartH / 2})">Y(占比 %)</text>
       <path d="${sLine.d}" fill="none" stroke="${sLine.color}" stroke-width="3" stroke-linecap="round"/>
       <path d="${infectedArea}" fill="url(#infectedFill)"></path>
-      <path d="${iLine.d}" fill="none" stroke="${iLine.color}" stroke-width="4.2" stroke-linecap="round"/>
-      <path d="${rLine.d}" fill="none" stroke="${rLine.color}" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="${peakPoint.x}" cy="${peakPoint.y}" r="5.5" fill="#c84735" stroke="#fff" stroke-width="2"></circle>
-      <circle cx="${finalPoint.x}" cy="${finalPoint.y}" r="4.5" fill="#c84735" stroke="#fff" stroke-width="2"></circle>
-      <text x="${peakPoint.x + 8}" y="${peakPoint.y - 10}" fill="#c84735" font-size="12" font-weight="700">峰值 ${data.peakInfected.toFixed(
+      <path d="${iLine.d}" fill="none" stroke="${iLine.color}" stroke-width="4.6" stroke-linecap="round"/>
+      <path d="${rLine.d}" fill="none" stroke="${rLine.color}" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="${peakPoint.x}" cy="${peakPoint.y}" r="5.8" fill="#ff654f" stroke="#fff" stroke-width="1.8"></circle>
+      <circle cx="${finalPoint.x}" cy="${finalPoint.y}" r="4.4" fill="#ff654f" stroke="#fff" stroke-width="1.6"></circle>
+      <text x="${Math.min(peakPoint.x + 10, chartX + chartW - 60)}" y="${Math.max(peakPoint.y - 10, chartY + 14)}" fill="#ffb4a6" font-size="11" font-weight="700">I 峰值 ${data.peakInfected.toFixed(
         1
       )}%</text>
-      ${legendMark(30, 202, "#c7ddd4", "S 易感")}
-      ${legendMark(110, 202, "#c84735", "I 传播")}
-      ${legendMark(192, 202, "#0f8f76", "R 移出")}
-      <text x="${chartX}" y="214" fill="#5b6962" font-size="12">t0</text>
-      <text x="${chartX + chartW * 0.44}" y="214" fill="#5b6962" font-size="12">峰值 t${data.peakStep}</text>
-      <text x="${chartX + chartW - 22}" y="214" fill="#5b6962" font-size="12">t200</text>
-      <text x="${chartX + 6}" y="${sBandY + 14}" fill="#5b6962" font-size="11">S 高频带</text>
-      <text x="${chartX + 6}" y="${chartY + 14}" fill="#5b6962" font-size="11">I/R 动态区</text>
-      <text x="${chartX + chartW - 32}" y="${chartY + 14}" fill="#5b6962" font-size="11">${(focusMax * 100).toFixed(1)}%</text>
-      ${cluster}
+      ${legendMark(58, 210, "#62d4f5", "S 易感")}
+      ${legendMark(142, 210, "#ff654f", "I 传播中")}
+      ${legendMark(244, 210, "#6de6a6", "R 已止传播")}
+      <text x="${chartX + chartW - 2}" y="${chartY + 15}" text-anchor="end" fill="rgba(230,248,242,.68)" font-size="11">β=${data.beta.toFixed(
+        2
+      )} γ=${data.gamma.toFixed(2)} ψ=${data.psi.toFixed(2)}</text>
     </svg>
   `;
 }
@@ -1407,90 +1586,106 @@ function seriesPointScaled(points, index, key, scaleMax, innerW, innerH, padX, p
 }
 
 function rumorClusterSvg(data) {
-  const nodes = [
-    [266, 54],
-    [288, 34],
-    [312, 46],
-    [330, 76],
-    [316, 104],
-    [288, 116],
-    [262, 96],
-    [282, 78],
-    [304, 86],
-    [340, 48],
-    [336, 102],
-    [264, 32],
-    [250, 66],
-    [274, 128],
-    [324, 122],
-    [350, 76],
-    [300, 22],
-    [246, 114],
+  const width = 360;
+  const height = 248;
+  const center = { x: 180, y: 120 };
+  const middle = [
+    { x: 180, y: 48, label: "行业层" },
+    { x: 246, y: 84, label: "社区层" },
+    { x: 246, y: 156, label: "群组层" },
+    { x: 180, y: 196, label: "家庭层" },
+    { x: 114, y: 156, label: "乡镇层" },
+    { x: 114, y: 84, label: "校园层" },
   ];
-  const links = [
-    [0, 1],
-    [0, 7],
-    [1, 2],
-    [2, 9],
-    [2, 8],
-    [7, 8],
-    [8, 10],
-    [7, 6],
-    [6, 5],
-    [5, 4],
-    [4, 10],
-    [6, 11],
-    [11, 1],
-    [0, 3],
-    [3, 10],
-    [12, 0],
-    [12, 6],
-    [13, 5],
-    [13, 6],
-    [14, 4],
-    [14, 10],
-    [15, 3],
-    [15, 9],
-    [16, 2],
-    [16, 9],
-    [17, 6],
-    [17, 13],
-  ];
-  const infected = Math.min(nodes.length, Math.max(1, Math.round((data.currentI / 1000) * nodes.length * 1.35)));
-  const resolved = Math.min(nodes.length - infected, Math.round((data.currentR / 1000) * nodes.length * 1.15));
-  const edges = links
-    .map(([a, b]) => {
-      const from = nodes[a];
-      const to = nodes[b];
-      return `<line x1="${from[0]}" y1="${from[1]}" x2="${to[0]}" y2="${to[1]}" stroke="#d7dfdb" stroke-width="2"></line>`;
-    })
+  const cityLabels = "ABCDEFGHIJKLMNOP".split("").map((letter) => `${letter} 市`);
+  const outer = cityLabels.map((label, index) => {
+    const angle = -Math.PI / 2 + (index / cityLabels.length) * Math.PI * 2;
+    return {
+      x: +(center.x + Math.cos(angle) * 132).toFixed(1),
+      y: +(center.y + Math.sin(angle) * 94).toFixed(1),
+      label,
+      anchor: middle[index % middle.length],
+    };
+  });
+  const infectedCount = Math.min(
+    outer.length,
+    Math.max(1, Math.round((data.peakInfected / 100) * outer.length * 2.8 + Math.max(0, data.reproduction - 1)))
+  );
+  const resolvedCount = Math.min(outer.length - infectedCount, Math.round((data.finalRemoved / 100) * outer.length * 2.4));
+  const middleLines = middle
+    .map(
+      (node) =>
+        `<line x1="${center.x}" y1="${center.y}" x2="${node.x}" y2="${node.y}" stroke="rgba(109,230,166,.32)" stroke-width="1.4"></line>`
+    )
     .join("");
-  const circles = nodes
+  const outerLines = outer
+    .map(
+      (node, index) =>
+        `<line x1="${node.anchor.x}" y1="${node.anchor.y}" x2="${node.x}" y2="${node.y}" stroke="${
+          index < infectedCount ? "rgba(255,101,79,.44)" : "rgba(98,212,245,.16)"
+        }" stroke-width="${index < infectedCount ? 1.5 : 1}"></line>`
+    )
+    .join("");
+  const middleNodes = middle
+    .map(
+      (node) => `
+        <g>
+          <circle cx="${node.x}" cy="${node.y}" r="10" fill="rgba(98,212,245,.2)" stroke="rgba(98,212,245,.86)" stroke-width="1.6"></circle>
+          <text x="${node.x}" y="${node.y - 15}" text-anchor="middle" fill="rgba(230,248,242,.68)" font-size="10">${node.label}</text>
+        </g>
+      `
+    )
+    .join("");
+  const outerNodes = outer
     .map((node, index) => {
-      let fill = "#d8e1dc";
-      if (index < infected) fill = "#c84735";
-      else if (index < infected + resolved) fill = "#0f8f76";
-      return `<circle cx="${node[0]}" cy="${node[1]}" r="${index < infected ? 6 : 5}" fill="${fill}" stroke="#fff" stroke-width="2"></circle>`;
+      const isInfected = index < infectedCount;
+      const isResolved = !isInfected && index < infectedCount + resolvedCount;
+      const fill = isInfected ? "#ff654f" : isResolved ? "#6de6a6" : "#263842";
+      const stroke = isInfected ? "rgba(255,180,166,.92)" : isResolved ? "rgba(109,230,166,.88)" : "rgba(98,212,245,.36)";
+      const labelVisible = state.rumor.cityMode;
+      return `
+        <g class="${labelVisible ? "city-label-on" : "city-label-off"}">
+          <circle cx="${node.x}" cy="${node.y}" r="${isInfected ? 6.8 : 5.3}" fill="${fill}" stroke="${stroke}" stroke-width="1.4"></circle>
+          ${
+            labelVisible
+              ? `<text x="${node.x}" y="${node.y - 9}" text-anchor="middle" fill="${
+                  isInfected ? "#ffb4a6" : "rgba(230,248,242,.76)"
+                }" font-size="9.5" font-weight="700">${node.label}</text>`
+              : ""
+          }
+        </g>
+      `;
     })
     .join("");
 
   return `
-    <g>
-      <rect x="246" y="24" width="96" height="116" rx="16" fill="rgba(248,251,250,0.95)" stroke="#d8e1dc"></rect>
-      <text x="260" y="44" fill="#17211d" font-size="12" font-weight="700">节点态势</text>
-      ${edges}
-      ${circles}
-      <text x="260" y="152" fill="#5b6962" font-size="11">红 = 扩散中</text>
-      <text x="260" y="168" fill="#5b6962" font-size="11">绿 = 已止传播</text>
-      <text x="260" y="184" fill="#5b6962" font-size="11">灰 = 仍易感</text>
-    </g>
+    <svg class="rumor-network-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="江淮抽象三层传播节点图，包含中心节点、城市行业节点和乡镇群组节点">
+      <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="18" fill="rgba(5,9,14,.66)" stroke="rgba(255,255,255,.12)"></rect>
+      <path d="M118 62 C150 20 223 24 252 66 C300 82 309 156 262 187 C230 226 155 220 118 185 C74 164 76 94 118 62Z"
+        fill="none" stroke="rgba(230,248,242,.05)" stroke-width="18" stroke-linejoin="round"></path>
+      ${middleLines}
+      ${outerLines}
+      <circle cx="${center.x}" cy="${center.y}" r="23" fill="rgba(109,230,166,.16)" stroke="rgba(109,230,166,.92)" stroke-width="2.4"></circle>
+      <circle cx="${center.x}" cy="${center.y}" r="8" fill="#6de6a6"></circle>
+      <text x="${center.x}" y="${center.y + 39}" text-anchor="middle" fill="rgba(230,248,242,.78)" font-size="11" font-weight="700">省域抽象中心</text>
+      ${middleNodes}
+      ${outerNodes}
+      <g transform="translate(22 202)">
+        ${legendMark(0, 0, "#ff654f", "I 传播中")}
+        ${legendMark(92, 0, "#6de6a6", "R 已止传播")}
+        ${legendMark(205, 0, "#263842", "S 易感")}
+      </g>
+      <text x="22" y="226" fill="rgba(230,248,242,.56)" font-size="10">当前亮起 ${infectedCount}/${outer.length} 个扩散节点 · ${
+    state.rumor.cityMode ? "16 个匿名地市标签已显示" : "地市标签未显示"
+  }</text>
+    </svg>
   `;
 }
 
 function legendMark(x, y, color, label) {
   return `
     <circle cx="${x}" cy="${y}" r="5" fill="${color}"></circle>
-    <text x="${x + 10}" y="${y + 4}" fill="#5b6962" font-size="12">${label}</text>
+    <text x="${x + 10}" y="${y + 4}" fill="rgba(230,248,242,.66)" font-size="11">${label}</text>
   `;
 }
 
@@ -1954,6 +2149,12 @@ screen.addEventListener("click", (event) => {
   if (evidence) {
     const [group, id] = evidence.dataset.evidence.split(":");
     handleEvidence(group, id);
+    return;
+  }
+
+  const preset = event.target.closest("[data-rumor-preset]");
+  if (preset) {
+    applyRumorPreset(preset.dataset.rumorPreset);
   }
 });
 
@@ -1961,6 +2162,15 @@ screen.addEventListener("input", (event) => {
   const slider = event.target.closest("[data-slider]");
   if (slider) {
     state.rumor[slider.dataset.slider] = Number(slider.value);
+    state.rumor.preset = "custom";
+    updateRumorView();
+    return;
+  }
+
+  const cityToggle = event.target.closest("[data-rumor-city]");
+  if (cityToggle) {
+    state.rumor.cityMode = cityToggle.checked;
+    addLog("SIR", state.rumor.cityMode ? "开启江淮某地市仿真标签。" : "关闭江淮某地市仿真标签。");
     updateRumorView();
     return;
   }
