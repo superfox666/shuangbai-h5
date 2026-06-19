@@ -568,35 +568,87 @@ function renderPersona() {
 }
 
 function renderMap() {
+  const persona = selectedPersona();
   setScreen(`
-    <section>
-      <p class="eyebrow">任务地图</p>
-      <h2 class="section-title">完成四个实验，生成匿名识伪报告</h2>
-      <p class="lead">每个实验都只有一个重点：先判断，再理解原因，最后带走可复用的行动建议。</p>
-      <div class="task-grid task-flow">
+    <section class="mission-map">
+      <div class="mission-brief">
+        <p class="eyebrow">S1 EXPERIMENT BOARD</p>
+        <h2 class="section-title">四关实验任务面板</h2>
+        <p class="lead">当前路线：${persona.name}。每个实验只训练一条可复用方法，完成后汇总成匿名江淮防伪通行证。</p>
+        <div class="mission-meta" aria-label="当前角色与作品主题">
+          <span>${persona.code}</span>
+          <strong>${persona.route}</strong>
+          <em>科创兴皖 · 科普育人 · 五类人群</em>
+        </div>
+      </div>
+      <div class="mission-queue" aria-label="实验任务面板">
         ${tasks
           .map(
-            (task, index) => `
-          <button class="task-card ${state.completed.has(task.id) ? "is-done" : ""}" type="button" data-nav="${task.id}">
-            <span class="card-icon">${icon(task.icon)}</span>
-            <span class="task-copy">
-              <p class="task-index">实验 ${String(index + 1).padStart(2, "0")}</p>
-              <h3>${task.title}</h3>
-              <p>${task.short}</p>
-            </span>
-            <span class="done-mark">${state.completed.has(task.id) ? `${icon("check", "tiny-icon")} 已结束` : "→ 进入"}</span>
-          </button>
-        `
+            (task, index) => {
+              const progress = progressForTask(task.id);
+              return `
+          <article class="mission-row ${state.completed.has(task.id) ? "is-done" : ""}">
+            <button class="mission-main" type="button" data-nav="${task.id}">
+              <span class="mission-number">EXP-${String(index + 1).padStart(2, "0")}</span>
+              <span class="mission-copy">
+                <span class="mission-ability">${task.ability}</span>
+                <h3>${task.title}</h3>
+                <span>${methodForTask(task.id)}</span>
+              </span>
+              <span class="mission-status" aria-label="${task.title}完成度 ${progress}%">
+                <span class="mission-status-top">
+                  <em>${progress}%</em>
+                  <small>${state.completed.has(task.id) ? "COMPLETE" : "READY"}</small>
+                </span>
+                <span class="mission-bar"><span style="width:${progress}%"></span></span>
+              </span>
+              <span class="mission-enter">${state.completed.has(task.id) ? "复查实验" : "进入实验"}</span>
+            </button>
+          </article>
+        `;
+            }
           )
           .join("")}
       </div>
-      <div class="button-row" style="margin-top:16px">
-        <button class="secondary-button" type="button" data-nav="sources">查看引用来源</button>
-        <button class="secondary-button" type="button" data-nav="about">查看设计说明</button>
+      <div class="mission-actions">
+        <button class="secondary-button" type="button" data-nav="persona">重选角色</button>
+        <button class="secondary-button" type="button" data-nav="sources">引用来源</button>
+        <button class="secondary-button" type="button" data-nav="about">设计说明</button>
         <button class="primary-button" type="button" data-nav="report">生成当前报告</button>
       </div>
     </section>
   `);
+}
+
+function methodForTask(id) {
+  const methods = {
+    phishing: "看来源链条，识别短链接、倒计时和验证码索要。",
+    deepfake: "找光影、边缘、口型与来源链条四类证据。",
+    rumor: "用 SIR 参数观察转发冲动、核验延迟与澄清触达。",
+    privacy: "按最小必要原则判断位置、通讯录、相机、麦克风。",
+  };
+  return methods[id] || "先判断，再理解，再带走行动口诀。";
+}
+
+function progressForTask(id) {
+  if (state.completed.has(id)) return 100;
+  if (id === "phishing") {
+    return Math.min(90, Math.round((state.found.phishing.size / 3) * 90));
+  }
+  if (id === "deepfake") {
+    return Math.min(90, Math.round((state.found.deepfake.size / evidenceSets.deepfake.length) * 90));
+  }
+  if (id === "rumor") {
+    const changed =
+      Math.abs(state.rumor.share - 62) +
+      Math.abs(state.rumor.delay - 55) +
+      Math.abs(state.rumor.authority - 44);
+    return Math.min(90, Math.round(changed * 1.8));
+  }
+  if (id === "privacy") {
+    return Math.min(90, Object.keys(state.privacy).length * 22);
+  }
+  return 0;
 }
 
 function renderPhishing() {
