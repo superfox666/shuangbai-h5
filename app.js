@@ -291,6 +291,7 @@ const state = {
     deepfake: new Set(),
   },
   missed: new Set(),
+  deepfakeLens: { x: 58, y: 44 },
   rumor: {
     share: 62,
     delay: 55,
@@ -816,6 +817,47 @@ function highlightPhishingMessage(message, pulseClass = "") {
     .replace(/验证码/g, `<span class="risk-token is-risk${pulseClass}">验证码</span>`);
 }
 
+function deepfakeScenario() {
+  const personaId = state.persona || "all";
+  const copy = {
+    civil: {
+      eyebrow: "EXP-02 · CIVIL DEEPFAKE BRIEFING",
+      title: "AI 换脸冒充上级布置紧急任务",
+      lead:
+        "模拟江淮某会议场景：一段“上级紧急布置任务”的视频被转发到工作群。先看来源链，再用光影、边缘、口型三类线索做交叉核验。",
+      mission: "判断这段视频是否只靠“权威口吻”制造服从压力，并找出深伪破绽。",
+      chips: ["江淮某会议室", "上级口吻诱导", "先核验来源链"],
+      safeLabel: "原始会议片段",
+      fakeLabel: "AI 换脸片段",
+    },
+    all: {
+      eyebrow: "EXP-02 · DEEPFAKE COMPARISON",
+      title: "深度伪造线索观察",
+      lead:
+        "这是自制剪影示意图，不是真实人脸。视觉异常只能提示风险，不能单独定真伪，需要和来源、上下文一起判断。",
+      mission: "比较上下两段画面，拖动放大镜观察同一区域，再点击你发现的破绽点。",
+      chips: ["剪影对比", "光影边缘核验", "来源链优先"],
+      safeLabel: "参考画面",
+      fakeLabel: "疑似合成画面",
+    },
+  };
+  return copy[personaId] || copy.all;
+}
+
+const deepfakeTerms = {
+  light: "GAN light-estimation",
+  edge: "blending artifact",
+  sync: "lip-sync drift",
+  source: "source-chain missing",
+};
+
+const deepfakeHotspots = {
+  light: { x: 28, y: 23 },
+  edge: { x: 70, y: 47 },
+  sync: { x: 55, y: 74 },
+  source: { x: 18, y: 82 },
+};
+
 function evidenceButton(group, item) {
   const found = state.found[group].has(item.id);
   const missed = state.missed.has(item.id);
@@ -844,42 +886,85 @@ function phishingSignalCard(item) {
 
 function renderDeepfake() {
   const foundCount = state.found.deepfake.size;
+  const scenario = deepfakeScenario();
+  const score = Math.min(100, Math.round((foundCount / evidenceSets.deepfake.length) * 100));
+  const foundItems = evidenceSets.deepfake.filter((item) => state.found.deepfake.has(item.id));
+  const barrage = foundItems.length
+    ? foundItems
+        .map(
+          (item, index) =>
+            `<span class="deepfake-barrage-token" style="--i:${index}">${deepfakeTerms[item.id] || item.label}</span>`
+        )
+        .join("")
+    : `<span class="deepfake-barrage-token is-muted" style="--i:0">点击破绽后显示原理弹幕</span>`;
   setScreen(`
-    <section>
-      <p class="eyebrow">实验二</p>
-      <h2 class="section-title">深度伪造线索观察</h2>
-      <p class="lead">这是自制示意图，不是真实人脸。视觉异常只能提示风险，不能单独定真伪。</p>
+    <section class="deepfake-lab">
+      <p class="eyebrow">${scenario.eyebrow}</p>
+      <h2 class="section-title">${scenario.title}</h2>
+      <p class="lead" data-persona-line>${scenario.lead}</p>
       <div class="deepfake-brief">
-        <span class="scenario-chip is-safe">先看来源链</span>
-        <span class="scenario-chip is-neutral">再看光影与边缘</span>
-        <span class="scenario-chip is-warning">最后核对语义节奏</span>
+        ${scenario.chips
+          .map((chip, index) => `<span class="scenario-chip is-${index === 1 ? "warning" : index === 2 ? "risk" : "safe"}">${chip}</span>`)
+          .join("")}
       </div>
       <div class="scenario">
-        <div class="diagram deepfake-diagram" aria-label="深度伪造线索示意图">
-          <img class="optional-bg-board" src="./assets/generated/deepfake-observation-board.png?v=20260611b" alt="" aria-hidden="true">
+        <div class="deepfake-stage" aria-label="深度伪造双图对比实验" style="--lens-x:${state.deepfakeLens.x}%; --lens-y:${state.deepfakeLens.y}%">
+          <img class="deepfake-watermark" src="./assets/generated/civil-meeting-deepfake-r3.webp?v=20260619s3" alt="" aria-hidden="true">
           <div class="scan-line" aria-hidden="true"></div>
-          <div class="diagram-caption">
-            <strong>观察顺序</strong>
-            <p>光照 → 边缘 → 口型节奏 → 原始发布者</p>
+          <div class="deepfake-stage-head">
+            <div>
+              <strong>对比任务</strong>
+              <p>${scenario.mission}</p>
+            </div>
+            <div class="hotspot-counter">已识别 ${foundCount}/4</div>
           </div>
-          <div class="hotspot-counter">已识别 ${foundCount}/4</div>
-          ${evidenceSets.deepfake
-            .map(
-              (item) => `
-            <button class="hotspot ${state.found.deepfake.has(item.id) ? "is-found" : ""}" type="button" data-evidence="deepfake:${item.id}" data-id="${item.id}" aria-label="${item.label}">
-              <span class="hotspot-core">!</span>
-              <span class="hotspot-ripple" aria-hidden="true"></span>
-            </button>
-          `
-            )
-            .join("")}
+          <div class="deepfake-compare-grid">
+            <article class="deepfake-frame is-reference">
+              <span class="frame-label">${scenario.safeLabel}</span>
+              <img src="./assets/generated/exp2-deepfake-pair-r2.webp?v=20260619s3" alt="抽象剪影对比参考图，画面不含真实人脸">
+            </article>
+            <article class="deepfake-frame is-suspect">
+              <span class="frame-label">${scenario.fakeLabel}</span>
+              <img src="./assets/generated/exp2-deepfake-pair-r2.webp?v=20260619s3" alt="抽象剪影对比疑似合成图，画面不含真实人脸">
+              <div class="deepfake-lens" aria-hidden="true">
+                <span>放大镜</span>
+              </div>
+              ${evidenceSets.deepfake
+                .map((item) => {
+                  const pos = deepfakeHotspots[item.id];
+                  const found = state.found.deepfake.has(item.id);
+                  return `
+                <button class="hotspot ${found ? "is-found" : ""}" type="button" data-evidence="deepfake:${item.id}" data-id="${item.id}" aria-label="${item.label}" style="--x:${pos.x}%; --y:${pos.y}%">
+                  <span class="hotspot-core">!</span>
+                  <span class="hotspot-ripple" aria-hidden="true"></span>
+                </button>
+                ${found ? `<span class="deepfake-flaw-box" data-id="${item.id}" style="--x:${pos.x}%; --y:${pos.y}%">${deepfakeTerms[item.id]}</span>` : ""}
+              `;
+                })
+                .join("")}
+            </article>
+          </div>
+          <div class="deepfake-barrage" aria-live="polite">
+            ${barrage}
+          </div>
         </div>
         <div class="hotspot-legend">
           ${evidenceSets.deepfake.map((item) => deepfakeLegendItem(item)).join("")}
         </div>
+        <div class="deepfake-score-strip">
+          <div>
+            <span>本关得分</span>
+            <strong class="score-readout">${score}</strong>
+          </div>
+          <div>
+            <span>证据进度</span>
+            <strong>${foundCount}/4</strong>
+          </div>
+          <p>参考 Rössler et al. FaceForensics++：深伪判断应结合光影、边缘、口型和来源链多证据核验。</p>
+        </div>
         <div id="explain" class="explain-card">
           <strong>提示</strong>
-          <p>把注意力放回证据链。视觉线索只是开始，来源和上下文才是判断中心。</p>
+          <p>拖动或移动指针调整放大镜位置。视觉线索只是开始，来源和上下文才是判断中心。</p>
         </div>
         <button class="primary-button" type="button" data-complete="deepfake">结束本实验</button>
       </div>
@@ -1888,12 +1973,38 @@ screen.addEventListener("input", (event) => {
   }
 });
 
+screen.addEventListener("pointermove", (event) => {
+  const stage = event.target.closest(".deepfake-stage");
+  if (!stage) return;
+  updateDeepfakeLens(stage, event.clientX, event.clientY);
+});
+
+screen.addEventListener(
+  "touchmove",
+  (event) => {
+    const touch = event.touches[0];
+    const stage = event.target.closest(".deepfake-stage");
+    if (!touch || !stage) return;
+    updateDeepfakeLens(stage, touch.clientX, touch.clientY);
+  },
+  { passive: true }
+);
+
 screen.addEventListener("change", (event) => {
   const slider = event.target.closest("[data-slider]");
   if (slider) {
     addLog("SIR", `更新 ${slider.dataset.slider} 参数为 ${slider.value}%。`);
   }
 });
+
+function updateDeepfakeLens(stage, clientX, clientY) {
+  const rect = stage.getBoundingClientRect();
+  const x = Math.max(8, Math.min(92, ((clientX - rect.left) / rect.width) * 100));
+  const y = Math.max(10, Math.min(90, ((clientY - rect.top) / rect.height) * 100));
+  state.deepfakeLens = { x: Math.round(x), y: Math.round(y) };
+  stage.style.setProperty("--lens-x", `${state.deepfakeLens.x}%`);
+  stage.style.setProperty("--lens-y", `${state.deepfakeLens.y}%`);
+}
 
 function handleEvidence(group, id) {
   if (group === "phishing") {
