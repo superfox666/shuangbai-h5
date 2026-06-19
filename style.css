@@ -395,6 +395,21 @@ img {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 16px;
+  scrollbar-color: oklch(72% 0.18 165 / .32) transparent;
+  scrollbar-width: thin;
+}
+
+.screen::-webkit-scrollbar {
+  width: 4px;
+}
+
+.screen::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.screen::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, oklch(72% 0.18 165 / .42), oklch(70% 0.15 230 / .24));
 }
 
 .screen-view {
@@ -3666,6 +3681,46 @@ input[type="range"]::-moz-range-thumb {
 
 .phone-frame .persona-skip {
   width: 100%;
+}
+
+.phone-frame .passport-screen .lead {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.phone-frame .passport-screen .report-panel {
+  gap: 12px;
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.phone-frame .passport-card {
+  gap: 10px;
+  padding: 12px;
+}
+
+.phone-frame .passport-issuer,
+.phone-frame .passport-card .report-head p {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.phone-frame .passport-card .score-big {
+  margin: 0 0 2px;
+  font-size: 52px;
+}
+
+.phone-frame .passport-radar {
+  padding: 6px;
+}
+
+.phone-frame .passport-radar svg {
+  max-width: 218px;
+}
+
+.phone-frame .passport-footer {
+  padding-top: 8px;
+  font-size: 10px;
 }
 
 .phone-frame .hero-inline-scene img {
