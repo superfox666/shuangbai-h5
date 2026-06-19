@@ -1,0 +1,167 @@
+:root {
+  color-scheme: dark light;
+
+  /* Layer 1: primitive palette. Lab Dark is the default visual direction. */
+  --p-lab-980: oklch(5% 0.012 250);
+  --p-lab-950: oklch(8% 0.02 250);
+  --p-lab-920: oklch(10% 0.018 250);
+  --p-lab-900: oklch(13% 0.02 250);
+  --p-lab-850: oklch(18% 0.025 250);
+  --p-lab-780: oklch(24% 0.022 250);
+  --p-lab-700-a60: oklch(28% 0.02 250 / 0.6);
+  --p-text-100: oklch(96% 0.01 250);
+  --p-text-200: oklch(84% 0.014 250);
+  --p-text-300: oklch(72% 0.02 250);
+  --p-text-500: oklch(54% 0.02 250);
+  --p-accent-500: oklch(72% 0.18 165);
+  --p-accent-600: oklch(58% 0.18 165);
+  --p-danger-500: oklch(64% 0.18 25);
+  --p-warn-500: oklch(78% 0.15 80);
+  --p-safe-500: oklch(72% 0.15 150);
+  --p-info-500: oklch(70% 0.15 230);
+  --p-jianghuai-ink: oklch(15% 0.028 238);
+  --p-jianghuai-mist: oklch(90% 0.028 190);
+  --p-light-bg: oklch(98% 0.01 250);
+  --p-light-surface: oklch(95% 0.01 250);
+  --p-light-text: oklch(15% 0.02 250);
+
+  /* Layer 1: primitive layout/type/motion. Keep to 4/8px grid. */
+  --grid: 4px;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --r-1: 6px;
+  --r-2: 12px;
+  --r-3: 20px;
+  --r-4: 28px;
+  --r-pill: 999px;
+  --font-display: "Source Han Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: var(--font-display);
+  --font-data: "JetBrains Mono", "Cascadia Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  --numeric-readout: tabular-nums slashed-zero;
+  --t-eyebrow: 12px;
+  --t-caption: 14px;
+  --t-body: 16px;
+  --t-data: 18px;
+  --t-h3: 20px;
+  --t-h2: 28px;
+  --t-h1: clamp(32px, 5vw, 56px);
+  --t-score: clamp(42px, 14vw, 68px);
+  --lh-tight: 1.08;
+  --lh-title: 1.18;
+  --lh-ui: 1.4;
+  --lh-body: 1.65;
+  --ls-display: -0.04em;
+  --ls-eyebrow: 0.08em;
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-medium: 280ms;
+  --motion-slow: 360ms;
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --ease-emphasized: cubic-bezier(.2, 0, 0, 1);
+  --z-sticky: 20;
+  --z-overlay: 40;
+  --z-toast: 60;
+
+  /* Layer 2: semantic tokens. */
+  --bg-0: var(--p-lab-950);
+  --bg-1: var(--p-lab-900);
+  --bg-2: var(--p-lab-850);
+  --bg-3: var(--p-lab-780);
+  --surface-card: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  --surface-raised: linear-gradient(180deg, oklch(20% 0.026 250), var(--bg-1));
+  --surface-passport: linear-gradient(135deg, oklch(12% 0.028 238), oklch(18% 0.035 165));
+  --hairline: var(--p-lab-700-a60);
+  --text-1: var(--p-text-100);
+  --text-2: var(--p-text-300);
+  --text-3: var(--p-text-500);
+  --text-inverse: var(--p-lab-950);
+  --accent: var(--p-accent-500);
+  --accent-2: var(--p-accent-600);
+  --danger: var(--p-danger-500);
+  --warn: var(--p-warn-500);
+  --safe: var(--p-safe-500);
+  --info: var(--p-info-500);
+  --jianghuai-line: var(--p-jianghuai-mist);
+  --border-soft: 1px solid var(--hairline);
+  --elevation-1: inset 0 1px 0 oklch(100% 0 0 / .06);
+  --elevation-2: inset 0 1px 0 oklch(100% 0 0 / .08), 0 16px 40px oklch(0% 0 0 / .22);
+
+  /* Layer 3: component tokens for V1.1 screens. */
+  --app-hairline-size: 5px;
+  --app-hairline-gradient: linear-gradient(90deg, transparent, var(--accent), var(--safe), transparent);
+  --focus-ring-color: oklch(72% 0.18 165 / .34);
+  --focus-ring: 0 0 0 3px var(--focus-ring-color);
+  --range-track: linear-gradient(90deg, var(--bg-1), var(--bg-2));
+  --range-fill: var(--accent);
+  --range-thumb-bg: var(--text-1);
+  --switch-track-off: var(--bg-2);
+  --switch-track-on: var(--accent);
+  --scan-line: linear-gradient(90deg, transparent, oklch(72% 0.18 165 / .72), transparent);
+  --scan-glow: 0 0 24px oklch(72% 0.18 165 / .26);
+  --risk-aura: radial-gradient(circle, oklch(64% 0.18 25 / .16), transparent 60%);
+  --persona-active-bg: linear-gradient(135deg, oklch(72% 0.18 165 / .18), oklch(70% 0.15 230 / .1));
+  --jianghuai-map-line: oklch(90% 0.028 190 / .28);
+  --passport-grid-line: oklch(90% 0.028 190 / .12);
+
+  /* Temporary legacy aliases for existing style.css migration. */
+  --color-bg: var(--bg-0);
+  --color-surface: var(--bg-1);
+  --color-panel: var(--bg-2);
+  --color-text: var(--text-1);
+  --color-text-muted: var(--text-2);
+  --color-border: var(--hairline);
+  --color-primary: var(--accent);
+  --color-danger: var(--danger);
+  --color-warning: var(--warn);
+  --color-success: var(--safe);
+  --shadow-soft: var(--elevation-1);
+  --shadow-lift: var(--elevation-2);
+}
+
+:root[data-theme="light"] {
+  --bg-0: var(--p-light-bg);
+  --bg-1: white;
+  --bg-2: var(--p-light-surface);
+  --bg-3: oklch(90% 0.012 250);
+  --surface-card: linear-gradient(180deg, white, var(--p-light-surface));
+  --surface-raised: linear-gradient(180deg, white, var(--p-light-bg));
+  --surface-passport: linear-gradient(135deg, white, oklch(94% 0.024 190));
+  --hairline: oklch(85% 0.01 250);
+  --text-1: var(--p-light-text);
+  --text-2: oklch(35% 0.02 250);
+  --text-3: oklch(50% 0.02 250);
+  --text-inverse: white;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-0: var(--p-light-bg);
+    --bg-1: white;
+    --bg-2: var(--p-light-surface);
+    --bg-3: oklch(90% 0.012 250);
+    --hairline: oklch(85% 0.01 250);
+    --text-1: var(--p-light-text);
+    --text-2: oklch(35% 0.02 250);
+    --text-3: oklch(50% 0.02 250);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+    --motion-medium: 1ms;
+    --motion-slow: 1ms;
+  }
+}
