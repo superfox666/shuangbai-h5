@@ -2832,9 +2832,115 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 14px;
 }
 
+.privacy-lab {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  isolation: isolate;
+}
+
+.privacy-lab::before {
+  content: "";
+  position: absolute;
+  inset: 70px -16px auto -16px;
+  z-index: -1;
+  height: 320px;
+  background: url("./assets/generated/dorm-privacy-r2.webp") center / cover no-repeat;
+  opacity: .055;
+  pointer-events: none;
+}
+
+.privacy-scene-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: var(--bd-soft);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0%, oklch(70% 0.15 230 / .16), transparent 36%),
+    var(--surface-card);
+}
+
+.privacy-scene-card div {
+  display: grid;
+  gap: 4px;
+}
+
+.privacy-scene-card span,
+.privacy-risk-head span,
+.scorecard-head span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.privacy-scene-card strong {
+  font-size: 15px;
+}
+
+.privacy-scene-card p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.privacy-risk-strip {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: var(--bd-soft);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.privacy-risk-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.privacy-risk-head strong {
+  color: var(--warn);
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-variant-numeric: var(--numeric-readout);
+}
+
+.privacy-risk-track {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--safe), var(--warn), var(--danger));
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px oklch(100% 0 0 / .08);
+}
+
+.privacy-risk-track span {
+  display: block;
+  height: 100%;
+  background: oklch(100% 0 0 / .72);
+  mix-blend-mode: screen;
+}
+
+.privacy-risk-scale {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+}
+
+.privacy-risk-scale span:nth-child(2) {
+  text-align: center;
+}
+
+.privacy-risk-scale span:last-child {
+  text-align: right;
+}
+
 .privacy-summary {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 116px minmax(0, 1fr);
   gap: 14px;
   margin-top: 16px;
   padding: 14px;
@@ -2900,9 +3006,34 @@ input[type="range"]::-moz-range-thumb {
   padding: 12px;
 }
 
+.permission-row.is-risk {
+  border-color: oklch(64% 0.18 25 / .44);
+  background:
+    radial-gradient(circle at 100% 0%, oklch(64% 0.18 25 / .14), transparent 38%),
+    var(--surface-card);
+}
+
+.permission-row.is-safe {
+  border-color: oklch(72% 0.15 150 / .42);
+}
+
 .permission-copy {
   display: grid;
   gap: 6px;
+}
+
+.permission-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.permission-title-row span {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: var(--numeric-readout);
 }
 
 .permission-row h3 {
@@ -2914,6 +3045,13 @@ input[type="range"]::-moz-range-thumb {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 13px;
+}
+
+.permission-copy em {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.4;
 }
 
 .mini-matrix {
@@ -2942,6 +3080,60 @@ input[type="range"]::-moz-range-thumb {
 .matrix-cell.is-muted {
   background: var(--color-surface-muted);
   color: var(--color-text-muted);
+}
+
+.privacy-scorecard {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: var(--bd-soft);
+  border-radius: 14px;
+  background: var(--surface-card);
+}
+
+.scorecard-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scorecard-head strong {
+  color: var(--color-accent);
+  font-size: 20px;
+}
+
+.scorecard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.scorecard-grid div {
+  display: grid;
+  gap: 4px;
+  padding: 10px 8px;
+  border: var(--bd-soft);
+  border-radius: 10px;
+  background: var(--bg-1);
+}
+
+.scorecard-grid span {
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+}
+
+.scorecard-grid strong {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-variant-numeric: var(--numeric-readout);
+}
+
+.privacy-scorecard p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .switch {

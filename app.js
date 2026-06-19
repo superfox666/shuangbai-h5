@@ -156,11 +156,13 @@ const permissions = [
     desc: "查附近科普场馆时可临时允许",
     needed: false,
     risk: "当前只是答题训练，精确定位不是必要权限。",
+    riskWeight: 26,
+    safeAction: "仅在导航附近场馆时临时允许",
     matrix: [
-      { feature: "扫码入场", ok: false },
-      { feature: "答题训练", ok: false },
-      { feature: "附近场馆", ok: true },
-      { feature: "报告导出", ok: false },
+      { feature: "宿舍学习", ok: false },
+      { feature: "查课表", ok: false },
+      { feature: "扫码取餐", ok: false },
+      { feature: "选课系统", ok: false },
     ],
   },
   {
@@ -169,11 +171,13 @@ const permissions = [
     desc: "邀请好友时可能被请求",
     needed: false,
     risk: "通讯录属于敏感信息，科普答题不需要读取联系人。",
+    riskWeight: 32,
+    safeAction: "拒绝读取联系人，改用手动分享",
     matrix: [
-      { feature: "扫码入场", ok: false },
-      { feature: "答题训练", ok: false },
-      { feature: "附近场馆", ok: false },
-      { feature: "报告导出", ok: false },
+      { feature: "宿舍学习", ok: false },
+      { feature: "查课表", ok: false },
+      { feature: "扫码取餐", ok: false },
+      { feature: "选课系统", ok: false },
     ],
   },
   {
@@ -182,11 +186,13 @@ const permissions = [
     desc: "扫码查看资料时可按需打开",
     needed: true,
     risk: "如果确实需要扫码，可临时允许；使用后可以关闭。",
+    riskWeight: 12,
+    safeAction: "扫码取餐或扫码查资料时临时允许",
     matrix: [
-      { feature: "扫码入场", ok: true },
-      { feature: "答题训练", ok: false },
-      { feature: "附近场馆", ok: false },
-      { feature: "报告导出", ok: false },
+      { feature: "宿舍学习", ok: false },
+      { feature: "查课表", ok: false },
+      { feature: "扫码取餐", ok: true },
+      { feature: "选课系统", ok: false },
     ],
   },
   {
@@ -195,11 +201,13 @@ const permissions = [
     desc: "本实验没有语音输入",
     needed: false,
     risk: "没有语音功能时请求麦克风，应拒绝或稍后再授权。",
+    riskWeight: 24,
+    safeAction: "无语音输入场景时保持关闭",
     matrix: [
-      { feature: "扫码入场", ok: false },
-      { feature: "答题训练", ok: false },
-      { feature: "附近场馆", ok: false },
-      { feature: "报告导出", ok: false },
+      { feature: "宿舍学习", ok: false },
+      { feature: "查课表", ok: false },
+      { feature: "扫码取餐", ok: false },
+      { feature: "选课系统", ok: false },
     ],
   },
 ];
@@ -1691,11 +1699,27 @@ function legendMark(x, y, color, label) {
 
 function renderPrivacy() {
   const result = calcPrivacy();
+  const scenario = privacyScenario();
   setScreen(`
-    <section>
-      <p class="eyebrow">实验四</p>
-      <h2 class="section-title">隐私授权风险判断</h2>
-      <p class="lead">判断模拟 App 权限是否必要。原则不是“全都拒绝”，而是“与当前功能直接相关才临时允许”。</p>
+    <section class="privacy-lab">
+      <p class="eyebrow">${scenario.eyebrow}</p>
+      <h2 class="section-title">${scenario.title}</h2>
+      <p class="lead" data-persona-line>${scenario.lead}</p>
+      <div class="privacy-scene-card">
+        <div>
+          <span>当前场景</span>
+          <strong>${scenario.scene}</strong>
+        </div>
+        <p>${scenario.prompt}</p>
+      </div>
+      <div class="privacy-risk-strip" style="--risk:${result.riskScore}">
+        <div class="privacy-risk-head">
+          <span>实时风险条</span>
+          <strong id="privacyRiskMetric">${result.riskScore}</strong>
+        </div>
+        <div class="privacy-risk-track" aria-hidden="true"><span style="width:${result.riskScore}%"></span></div>
+        <div class="privacy-risk-scale"><span>低暴露</span><span>谨慎</span><span>高暴露</span></div>
+      </div>
       <div class="privacy-summary">
         <div class="privacy-score-ring" style="--score:${result.score}">
           <div class="privacy-score-inner">
@@ -1714,37 +1738,22 @@ function renderPrivacy() {
         </div>
       </div>
       <div class="permission-phone">
-        <div class="message-head"><span>模拟应用：安全训练营</span><span>权限设置</span></div>
+        <div class="message-head"><span>${scenario.appName}</span><span>权限矩阵</span></div>
         <div class="permission-list">
-          ${permissions
-            .map(
-              (permission) => `
-            <div class="permission-row">
-              <div class="permission-copy">
-                <h3>${permission.title}</h3>
-                <p>${permission.desc}</p>
-                <div class="mini-matrix" aria-label="${permission.title} 必要性矩阵">
-                  ${permission.matrix
-                    .map(
-                      (item) =>
-                        `<span class="matrix-cell ${item.ok ? "is-useful" : "is-muted"}">${
-                          item.ok ? "✓" : "✗"
-                        } ${item.feature}</span>`
-                    )
-                    .join("")}
-                </div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" data-permission="${permission.id}" ${
-                state.privacy[permission.id] ? "checked" : ""
-              } aria-label="${permission.title}">
-                <span aria-hidden="true"></span>
-              </label>
-            </div>
-          `
-            )
-            .join("")}
+          ${permissions.map((permission) => permissionRow(permission)).join("")}
         </div>
+      </div>
+      <div class="privacy-scorecard">
+        <div class="scorecard-head">
+          <span>最小必要原则评分卡</span>
+          <strong>${result.grade}</strong>
+        </div>
+        <div class="scorecard-grid">
+          <div><span>必要权限</span><strong>${result.neededAllowed}/${result.neededTotal}</strong></div>
+          <div><span>多余暴露</span><strong>${result.riskyCount}</strong></div>
+          <div><span>撤回建议</span><strong>${result.revokeList.length}</strong></div>
+        </div>
+        <p>${result.scorecard}</p>
       </div>
       <div class="explain-card">
         <strong>${result.title}</strong>
@@ -1755,47 +1764,126 @@ function renderPrivacy() {
   `);
 }
 
+function privacyScenario() {
+  const personaId = state.persona || "all";
+  const copy = {
+    youth: {
+      eyebrow: "EXP-04 · DORM PRIVACY MATRIX",
+      title: "宿舍学习 App 权限判断",
+      lead: "模拟江淮某高校宿舍夜间学习场景：一个学习助手同时请求定位、通讯录、相机和麦克风。判断哪些权限与当前功能直接相关。",
+      scene: "宿舍学习 / 查课表 / 扫码取餐 / 选课系统",
+      prompt: "当前任务是学习、课表与扫码取餐，不需要读取通讯录，也不需要常开麦克风。",
+      appName: "模拟应用：宿舍学习助手",
+    },
+    elder: {
+      eyebrow: "EXP-04 · FAMILY APP PERMISSION",
+      title: "健康服务 App 权限判断",
+      lead: "模拟家庭群推荐的健康服务 App。权限越多不代表越安全，先看当前功能是否真的需要。",
+      scene: "健康资讯 / 扫码挂号 / 报告导出 / 家庭提醒",
+      prompt: "健康资讯和报告导出通常不需要通讯录或麦克风；扫码时可临时允许相机。",
+      appName: "模拟应用：健康服务助手",
+    },
+    all: {
+      eyebrow: "EXP-04 · PRIVACY MINIMUM LAB",
+      title: "隐私授权风险判断",
+      lead: "判断模拟 App 权限是否必要。原则不是“全都拒绝”，而是“与当前功能直接相关才临时允许”。",
+      scene: "学习任务 / 扫码资料 / 报告导出 / 账号设置",
+      prompt: "把每个权限放回具体功能里判断：现在不用，就先不开；临时用完，就撤回。",
+      appName: "模拟应用：安全训练营",
+    },
+  };
+  return copy[personaId] || copy.all;
+}
+
+function permissionRow(permission) {
+  const enabled = !!state.privacy[permission.id];
+  const riskClass = enabled && !permission.needed ? "is-risk" : enabled ? "is-safe" : "is-neutral";
+  return `
+    <div class="permission-row ${riskClass}">
+      <div class="permission-copy">
+        <div class="permission-title-row">
+          <h3>${permission.title}</h3>
+          <span>${enabled ? "已开启" : "未开启"}</span>
+        </div>
+        <p>${permission.desc}</p>
+        <div class="mini-matrix" aria-label="${permission.title} 必要性矩阵">
+          ${permission.matrix
+            .map((item) => `<span class="matrix-cell ${item.ok ? "is-useful" : "is-muted"}">${item.ok ? "✓" : "✗"} ${item.feature}</span>`)
+            .join("")}
+        </div>
+        <em>${permission.safeAction}</em>
+      </div>
+      <label class="switch">
+        <input type="checkbox" data-permission="${permission.id}" ${enabled ? "checked" : ""} aria-label="${permission.title}">
+        <span aria-hidden="true"></span>
+      </label>
+    </div>
+  `;
+}
+
 function calcPrivacy() {
   const risky = permissions.filter((permission) => !permission.needed && state.privacy[permission.id]);
   const neededDenied = permissions.filter((permission) => permission.needed && !state.privacy[permission.id]);
   const allowedCount = permissions.filter((permission) => state.privacy[permission.id]).length;
+  const neededAllowed = permissions.filter((permission) => permission.needed && state.privacy[permission.id]).length;
+  const neededTotal = permissions.filter((permission) => permission.needed).length;
+  const riskScore = Math.min(
+    100,
+    Math.max(
+      0,
+      8 +
+        risky.reduce((sum, permission) => sum + permission.riskWeight, 0) +
+        neededDenied.length * 8 +
+        Math.max(0, allowedCount - neededAllowed) * 6
+    )
+  );
+  const revokeList = risky.map((permission) => permission.title);
+  const base = {
+    riskyCount: risky.length,
+    neededDeniedCount: neededDenied.length,
+    allowedCount,
+    neededAllowed,
+    neededTotal,
+    riskScore,
+    revokeList,
+  };
   if (risky.length > 1) {
     return {
+      ...base,
       score: 35,
       title: "授权过多",
       message: `${risky.map((item) => item.title).join("、")}不是当前答题训练的必要权限。请按最小必要原则关闭与功能无关的敏感权限。`,
-      riskyCount: risky.length,
-      neededDeniedCount: neededDenied.length,
-      allowedCount,
+      grade: "高暴露",
+      scorecard: `建议立即撤回：${revokeList.join("、")}。当前功能不需要这些敏感权限。`,
     };
   }
   if (risky.length === 1) {
     return {
+      ...base,
       score: 65,
       title: "仍有一个高风险授权",
       message: `${risky[0].risk} 权限判断要回到“现在这项功能是否真的需要”。`,
-      riskyCount: risky.length,
-      neededDeniedCount: neededDenied.length,
-      allowedCount,
+      grade: "需收紧",
+      scorecard: `建议撤回：${risky[0].title}。保留必要权限时也要选择“仅本次允许”。`,
     };
   }
   if (neededDenied.length > 0) {
     return {
+      ...base,
       score: 82,
       title: "保护意识较好",
       message: "你没有额外放开高风险权限。确实需要扫码时，可以临时允许相机，用完后再关闭。",
-      riskyCount: risky.length,
-      neededDeniedCount: neededDenied.length,
-      allowedCount,
+      grade: "低暴露",
+      scorecard: "当前没有多余敏感授权。若现场需要扫码，再临时打开相机，完成后撤回。",
     };
   }
   return {
+    ...base,
     score: 95,
     title: "接近最小必要授权",
     message: "只允许与当前功能直接相关的权限，是降低个人信息暴露面的有效习惯。",
-    riskyCount: risky.length,
-    neededDeniedCount: neededDenied.length,
-    allowedCount,
+    grade: "最小必要",
+    scorecard: "只保留与当前功能直接相关的权限，符合个人信息处理应限于最小范围的原则。",
   };
 }
 
