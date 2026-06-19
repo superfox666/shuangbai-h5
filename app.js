@@ -30,6 +30,8 @@ const tasks = [
 ];
 
 const PERSONA_STORAGE_KEY = "persona";
+const ONLINE_URL = "https://superfox666.github.io/shuangbai-h5/";
+const PASS_ISSUER = "安徽省百所高校百万大学生科普创意创新大赛 · 双百H5互动作品";
 
 const PERSONAS = [
   {
@@ -400,7 +402,7 @@ function updateChrome() {
 
   const current = tasks.find((task) => task.id === state.screen);
   const titles = {
-    report: "识伪报告",
+    report: "江淮通行证",
     sources: "引用来源",
     about: "关于作品",
     map: "任务地图",
@@ -480,7 +482,7 @@ function renderHome() {
             </article>
             <article class="fact-card">
               <strong>1 张通行证</strong>
-              <p>最后生成匿名的江淮防伪能力报告。</p>
+              <p>最后生成匿名的江淮防伪通行证。</p>
             </article>
           </div>
           <div class="hero-note">
@@ -1889,47 +1891,82 @@ function calcPrivacy() {
 
 function renderReport() {
   const scores = calcScores();
-  const total = Math.round((scores.source + scores.evidence + scores.spread + scores.privacy) / 4);
+  const total = reportTotal(scores);
+  const issuedAt = passportIssuedAt();
+  const level = passportLevel(total);
+  const serial = passportSerial(total);
   setScreen(`
-    <section>
-      <p class="eyebrow">结尾报告</p>
-      <h2 class="section-title">你的识伪能力报告</h2>
+    <section class="passport-screen">
+      <p class="eyebrow">江淮防伪通行证</p>
+      <h2 class="section-title">匿名实验室通行证</h2>
+      <p class="lead">本通行证只基于本次互动状态生成，不采集真实个人数据，也不保存你的操作记录。</p>
       <div class="report-panel">
-        <div class="report-head">
-          <span class="score-big">${total}</span>
-          <p class="lead">本报告只基于本次互动状态生成，不采集真实个人数据，也不保存你的操作记录。</p>
-        </div>
-        <div class="radar-wrap">
-          ${radarSvg(scores)}
-        </div>
+        <article class="passport-card" id="passportCard">
+          <div class="passport-corners" aria-hidden="true"></div>
+          <header class="passport-header">
+            <div>
+              <span class="passport-label">ANON PASS ID</span>
+              <strong>${serial}</strong>
+            </div>
+            <span class="passport-stamp ${level.tone}">${level.label}</span>
+          </header>
+          <p class="passport-issuer">签发来源：${PASS_ISSUER}</p>
+          <div class="passport-main">
+            <div class="report-head">
+              <span class="passport-label">江淮智辨 AI · 防伪实验室</span>
+              <span class="score-big">${total}</span>
+              <p>五维能力均按 100 分制折算，用于提示本次训练状态，不代表真实身份认证。</p>
+            </div>
+            <div class="radar-wrap passport-radar">
+              ${radarSvg(scores)}
+            </div>
+          </div>
+          <footer class="passport-footer">
+            <span>完成时间 ${issuedAt}</span>
+            <span>风险等级章戳 ${level.stamp}</span>
+          </footer>
+        </article>
         <div class="report-insight-row">
           ${reportHighlights(scores, total)}
         </div>
-        <div class="ability-list">
-          ${abilityRow("来源核验", scores.source)}
-          ${abilityRow("证据观察", scores.evidence)}
-          ${abilityRow("传播抑制", scores.spread)}
-          ${abilityRow("隐私保护", scores.privacy)}
-        </div>
-        <div>
-          <h3>行动清单</h3>
-          <ul class="action-list">
-            <li>重要信息先看发布来源，不从陌生链接进入。</li>
-            <li>看到 AI 画面或视频时，先找原始发布者和权威说明。</li>
-            <li>未经核实的信息先暂停，不急着转发。</li>
-            <li>App 权限按最小必要原则授权，用完及时撤回。</li>
-          </ul>
+        <div class="passport-lower-grid">
+          <div class="ability-list">
+            ${abilityRow("来源核验", scores.source)}
+            ${abilityRow("证据观察", scores.evidence)}
+            ${abilityRow("传播抑制", scores.spread)}
+            ${abilityRow("隐私保护", scores.privacy)}
+            ${abilityRow("行动转化", scores.practice)}
+          </div>
+          <article class="passport-action-card">
+            <h3>行动清单</h3>
+            <ul class="action-list">
+              <li>重要信息先看发布来源，不从陌生链接进入。</li>
+              <li>看到 AI 画面或视频时，先找原始发布者和权威说明。</li>
+              <li>未经核实的信息先暂停，不急着转发。</li>
+              <li>App 权限按最小必要原则授权，用完及时撤回。</li>
+            </ul>
+          </article>
+          <article class="passport-qr-card">
+            <img src="./assets/generated/qr-shuangbai-h5.svg" alt="作品在线链接二维码">
+            <div>
+              <span class="passport-label">ONLINE LINK</span>
+              <strong>扫码查看 H5</strong>
+              <p>${ONLINE_URL}</p>
+            </div>
+          </article>
         </div>
         <div class="score-rule">
           <p>来源核验力 = 真风险点识别率 × 60 + 错点惩罚修正 × 40</p>
           <p>证据观察力 = 深伪热点识别率 × 70 + 来源链判断 × 30</p>
           <p>传播抑制力 = 100 - 感染峰值占比修正</p>
           <p>隐私保护力 = 最小必要授权达成度</p>
+          <p>行动转化力 = 完成实验数 + 五类人群路线覆盖度</p>
         </div>
         <div class="button-row">
           <button class="secondary-button" type="button" data-nav="map">回到任务地图</button>
           <button class="secondary-button" type="button" data-nav="sources">查看引用来源</button>
-          <button class="secondary-button" type="button" data-export="poster">导出识伪报告</button>
+          <button class="secondary-button" type="button" data-copy="online">以匿名身份分享</button>
+          <button class="secondary-button" type="button" data-export="poster">保存为 JPG</button>
           <button class="primary-button" type="button" data-nav="about">查看作品说明</button>
         </div>
       </div>
@@ -1943,7 +1980,36 @@ function calcScores() {
   const rumorData = calcRumor();
   const spread = Math.max(25, 100 - Math.round(rumorData.peakInfected * 1.5));
   const privacy = calcPrivacy().score;
-  return { source, evidence, spread, privacy };
+  const practice = Math.min(100, 48 + state.completed.size * 10 + (state.persona === "all" ? 12 : 6));
+  return { source, evidence, spread, privacy, practice };
+}
+
+function reportTotal(scores) {
+  return Math.round((scores.source + scores.evidence + scores.spread + scores.privacy + scores.practice) / 5);
+}
+
+function passportLevel(total) {
+  if (total >= 86) return { label: "稳定通行", stamp: "低风险", tone: "is-safe" };
+  if (total >= 72) return { label: "复核通行", stamp: "中风险", tone: "is-neutral" };
+  return { label: "继续训练", stamp: "需加练", tone: "is-warning" };
+}
+
+function passportSerial(total) {
+  const date = new Date();
+  const stamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(
+    2,
+    "0"
+  )}`;
+  const personaCode = selectedPersona().code.replace("P-", "G");
+  return `JH-AI-${stamp}-${personaCode}-${String(total).padStart(3, "0")}`;
+}
+
+function passportIssuedAt() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(
+    2,
+    "0"
+  )} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
 function reportHighlights(scores, total) {
@@ -1952,6 +2018,7 @@ function reportHighlights(scores, total) {
     { label: "证据观察", value: scores.evidence },
     { label: "传播抑制", value: scores.spread },
     { label: "隐私保护", value: scores.privacy },
+    { label: "行动转化", value: scores.practice },
   ];
   const best = [...entries].sort((a, b) => b.value - a.value)[0];
   const weakest = [...entries].sort((a, b) => a.value - b.value)[0];
@@ -1959,7 +2026,7 @@ function reportHighlights(scores, total) {
   return `
     <article class="insight-pill ${tone}">
       <span>综合状态</span>
-      <strong>${total >= 86 ? "可对外展示" : total >= 72 ? "继续优化" : "需要再练"}</strong>
+      <strong>${passportLevel(total).label}</strong>
     </article>
     <article class="insight-pill is-safe">
       <span>最佳维度</span>
@@ -1984,29 +2051,30 @@ function abilityRow(label, value) {
 function radarSvg(scores) {
   const cx = 150;
   const cy = 150;
-  const radii = [22, 50, 78, 108];
+  const radii = [22, 48, 74, 100];
   const labels = [
     { key: "source", label: "来源核验", angle: -90 },
-    { key: "evidence", label: "证据观察", angle: 0 },
-    { key: "spread", label: "传播抑制", angle: 90 },
-    { key: "privacy", label: "隐私保护", angle: 180 },
+    { key: "evidence", label: "证据观察", angle: -18 },
+    { key: "spread", label: "传播抑制", angle: 54 },
+    { key: "privacy", label: "隐私保护", angle: 126 },
+    { key: "practice", label: "行动转化", angle: 198 },
   ];
 
   const rings = radii
     .map((radius) => polygonPoints(labels, radius, cx, cy))
-    .map((points) => `<polygon points="${points}" fill="none" stroke="#d8e1dc" stroke-width="2"></polygon>`)
+    .map((points) => `<polygon points="${points}" fill="none" stroke="rgba(194,231,220,.24)" stroke-width="1"></polygon>`)
     .join("");
 
   const axes = labels
     .map((item) => {
-      const pt = polarPoint(cx, cy, 108, item.angle);
-      return `<line x1="${cx}" y1="${cy}" x2="${pt.x}" y2="${pt.y}" stroke="#d8e1dc" stroke-width="2"></line>`;
+      const pt = polarPoint(cx, cy, 100, item.angle);
+      return `<line x1="${cx}" y1="${cy}" x2="${pt.x}" y2="${pt.y}" stroke="rgba(194,231,220,.28)" stroke-width="1"></line>`;
     })
     .join("");
 
   const scorePoints = labels
     .map((item) => {
-      const radius = 108 * (scores[item.key] / 100);
+      const radius = 100 * (scores[item.key] / 100);
       const pt = polarPoint(cx, cy, radius, item.angle);
       return `${pt.x},${pt.y}`;
     })
@@ -2014,16 +2082,16 @@ function radarSvg(scores) {
 
   const text = labels
     .map((item) => {
-      const pt = polarPoint(cx, cy, 132, item.angle);
-      return `<text x="${pt.x}" y="${pt.y}" text-anchor="middle" dominant-baseline="middle" fill="#5b6962" font-size="12">${item.label}</text>`;
+      const pt = polarPoint(cx, cy, 126, item.angle);
+      return `<text x="${pt.x}" y="${pt.y}" text-anchor="middle" dominant-baseline="middle" fill="#b9ccc6" font-size="10" font-family="Cascadia Mono, monospace">${item.label}</text>`;
     })
     .join("");
 
   return `
-    <svg viewBox="0 0 300 300" role="img" aria-label="四维能力雷达图">
+    <svg viewBox="0 0 300 300" role="img" aria-label="五维能力雷达图">
       ${rings}
       ${axes}
-      <polygon points="${scorePoints}" fill="rgba(15,143,118,.2)" stroke="#08705c" stroke-width="3"></polygon>
+      <polygon points="${scorePoints}" fill="rgba(48,214,171,.2)" stroke="#30d6ab" stroke-width="2"></polygon>
       ${text}
     </svg>
   `;
@@ -2118,70 +2186,134 @@ function addLog(label, text) {
 
 function exportPoster() {
   const scores = calcScores();
-  const total = Math.round((scores.source + scores.evidence + scores.spread + scores.privacy) / 4);
+  const qrImage = new Image();
+  qrImage.onload = () => drawPassportPoster(scores, qrImage);
+  qrImage.onerror = () => drawPassportPoster(scores);
+  qrImage.src = "./assets/generated/qr-shuangbai-h5.svg";
+}
+
+function drawPassportPoster(scores, qrImage) {
+  const total = reportTotal(scores);
+  const level = passportLevel(total);
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1080;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  ctx.fillStyle = "#f6f8f7";
+  ctx.fillStyle = "#071016";
   ctx.fillRect(0, 0, 1080, 1080);
+  ctx.fillStyle = "rgba(48,214,171,0.08)";
+  for (let x = 0; x < 1080; x += 36) ctx.fillRect(x, 0, 1, 1080);
+  for (let y = 0; y < 1080; y += 36) ctx.fillRect(0, y, 1080, 1);
 
-  ctx.fillStyle = "#17211d";
-  ctx.font = "700 62px 'Microsoft YaHei', sans-serif";
-  ctx.fillText("智辨AI", 80, 130);
-  ctx.fillStyle = "#5b6962";
-  ctx.font = "400 30px 'Microsoft YaHei', sans-serif";
-  ctx.fillText("科创兴皖，科普育人", 80, 185);
+  ctx.fillStyle = "#0d1b20";
+  roundRect(ctx, 70, 70, 940, 700, 34);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(48,214,171,0.42)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
-  ctx.fillStyle = "#0f8f76";
-  ctx.fillRect(80, 230, 920, 280);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "700 46px 'Cascadia Mono', monospace";
-  ctx.fillText("识伪能力报告", 120, 310);
-  ctx.font = "700 140px 'Cascadia Mono', monospace";
-  ctx.fillText(String(total), 120, 435);
-  ctx.font = "400 28px 'Microsoft YaHei', sans-serif";
-  ctx.fillText("总分基于来源核验、证据观察、传播抑制、隐私保护四项能力生成", 120, 480);
+  ctx.fillStyle = "#d6fff1";
+  ctx.font = "700 54px 'Microsoft YaHei', sans-serif";
+  ctx.fillText("江淮智辨 AI · 防伪实验室", 112, 150);
+  ctx.fillStyle = "#8aa89f";
+  ctx.font = "400 25px 'Microsoft YaHei', sans-serif";
+  ctx.fillText(PASS_ISSUER, 112, 198);
+
+  ctx.fillStyle = "#30d6ab";
+  ctx.font = "700 132px 'Cascadia Mono', monospace";
+  ctx.fillText(String(total), 112, 360);
+  ctx.fillStyle = "#d6fff1";
+  ctx.font = "700 38px 'Microsoft YaHei', sans-serif";
+  ctx.fillText(`匿名通行状态：${level.label}`, 112, 420);
+  ctx.fillStyle = "#8aa89f";
+  ctx.font = "400 25px 'Microsoft YaHei', sans-serif";
+  ctx.fillText("五维能力：来源核验 / 证据观察 / 传播抑制 / 隐私保护 / 行动转化", 112, 466);
+  ctx.fillText(`编号：${passportSerial(total)}    完成时间：${passportIssuedAt()}`, 112, 510);
 
   const rows = [
     ["来源核验", scores.source],
     ["证据观察", scores.evidence],
     ["传播抑制", scores.spread],
     ["隐私保护", scores.privacy],
+    ["行动转化", scores.practice],
   ];
-  ctx.fillStyle = "#17211d";
-  ctx.font = "600 34px 'Microsoft YaHei', sans-serif";
   rows.forEach((row, index) => {
-    const y = 610 + index * 84;
+    const y = 585 + index * 44;
+    ctx.fillStyle = "#d6fff1";
+    ctx.font = "600 25px 'Microsoft YaHei', sans-serif";
     ctx.fillText(row[0], 80, y);
-    ctx.fillStyle = "#edf2ef";
-    ctx.fillRect(280, y - 24, 560, 26);
-    ctx.fillStyle = "#0f8f76";
-    ctx.fillRect(280, y - 24, Math.round((560 * row[1]) / 100), 26);
-    ctx.fillStyle = "#17211d";
-    ctx.font = "600 30px 'Cascadia Mono', monospace";
-    ctx.fillText(`${row[1].toFixed(1)}`, 880, y);
-    ctx.font = "600 34px 'Microsoft YaHei', sans-serif";
+    ctx.fillStyle = "rgba(214,255,241,0.12)";
+    ctx.fillRect(230, y - 20, 560, 16);
+    ctx.fillStyle = "#30d6ab";
+    ctx.fillRect(230, y - 20, Math.round((560 * row[1]) / 100), 16);
+    ctx.fillStyle = "#d6fff1";
+    ctx.font = "600 24px 'Cascadia Mono', monospace";
+    ctx.fillText(`${row[1].toFixed(1)}`, 830, y);
   });
 
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(80, 900, 920, 120);
-  ctx.strokeStyle = "#d8e1dc";
-  ctx.strokeRect(80, 900, 920, 120);
-  ctx.fillStyle = "#17211d";
-  ctx.font = "700 28px 'Microsoft YaHei', sans-serif";
-  ctx.fillText("行动口诀：看来源 / 找证据 / 慢转发 / 少授权", 120, 952);
-  ctx.fillStyle = "#5b6962";
-  ctx.font = "400 24px 'Microsoft YaHei', sans-serif";
-  ctx.fillText("本报告仅基于本次互动生成，不采集真实个人数据。", 120, 993);
+  ctx.fillStyle = "#d6fff1";
+  ctx.font = "700 30px 'Microsoft YaHei', sans-serif";
+  ctx.fillText("行动口诀：看来源 / 找证据 / 慢转发 / 少授权", 92, 815);
+  ctx.fillStyle = "#8aa89f";
+  ctx.font = "400 23px 'Microsoft YaHei', sans-serif";
+  ctx.fillText("本通行证仅基于本次互动生成，不采集真实个人数据。", 92, 860);
+
+  ctx.fillStyle = "#d6fff1";
+  ctx.fillRect(810, 785, 170, 170);
+  if (qrImage) ctx.drawImage(qrImage, 822, 797, 146, 146);
+  ctx.fillStyle = "#8aa89f";
+  ctx.font = "400 20px 'Cascadia Mono', monospace";
+  ctx.fillText(ONLINE_URL, 92, 930);
 
   const link = document.createElement("a");
-  link.download = "识伪能力报告海报.png";
-  link.href = canvas.toDataURL("image/png");
+  link.download = "江淮防伪通行证.jpg";
+  link.href = canvas.toDataURL("image/jpeg", 0.92);
   link.click();
-  addLog("报告", "导出了识伪能力海报。");
+  addLog("通行证", "保存了江淮防伪通行证 JPG。");
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function copyPassportLink(button) {
+  const markCopied = () => {
+    button.textContent = "已复制链接";
+    addLog("通行证", "复制了匿名分享链接。");
+    window.setTimeout(() => {
+      button.textContent = "以匿名身份分享";
+    }, 1400);
+  };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(ONLINE_URL).then(markCopied).catch(() => fallbackCopy(markCopied));
+    return;
+  }
+  fallbackCopy(markCopied);
+}
+
+function fallbackCopy(done) {
+  const input = document.createElement("textarea");
+  input.value = ONLINE_URL;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.left = "-999px";
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
+  done();
 }
 
 screen.addEventListener("click", (event) => {
@@ -2230,6 +2362,12 @@ screen.addEventListener("click", (event) => {
   const exportButton = event.target.closest("[data-export]");
   if (exportButton) {
     exportPoster();
+    return;
+  }
+
+  const copyButton = event.target.closest("[data-copy]");
+  if (copyButton) {
+    copyPassportLink(copyButton);
     return;
   }
 
