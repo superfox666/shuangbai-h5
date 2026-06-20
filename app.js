@@ -476,7 +476,7 @@ function renderHome() {
       <div class="hero-grid">
         <div class="hero-copy">
           <div class="lab-system-strip" aria-label="作品定位">
-            <span>JIANGHUAI AI FORENSIC LAB</span>
+            <span>江淮 AI 防伪实验室</span>
             <span>H5 INTERACTIVE</span>
           </div>
           <div class="hero-headline-copy">
@@ -577,8 +577,8 @@ function renderPersona() {
           <span class="persona-map-dot dot-a"></span>
           <span class="persona-map-dot dot-b"></span>
           <span class="persona-map-dot dot-c"></span>
-          <strong>FIVE PUBLIC GROUPS</strong>
-          <p>Jianghuai AI Forensic Pass</p>
+          <strong>五类重点人群</strong>
+          <p>面向青少年/农民/产业工人/老年人/领导干部及公务员</p>
         </div>
         <div class="persona-grid">
           ${PERSONAS.map(
@@ -770,7 +770,7 @@ function renderPhishing() {
   ];
   setScreen(`
     <section class="phishing-lab">
-      <p class="eyebrow">EXP-01 · JIANGHUAI TERMINAL</p>
+      <p class="eyebrow">EXP-01 · 江淮终端</p>
       <h2 class="section-title">钓鱼信息诊断</h2>
       <p class="lead">${scenario.intro}</p>
       <div class="scenario">
@@ -1089,7 +1089,7 @@ function rumorScenario() {
       scene: "越像正式任务，越要核验发布链条，不能只看口吻。",
     },
     all: {
-      eyebrow: "EXP-03 · JIANGHUAI SIR LAB",
+      eyebrow: "EXP-03 · 江淮 SIR 实验",
       title: "谣言传播 SIR 模拟器",
       lead:
         "把公共传播场景翻译成 SIR 模型：S 是未接触或未相信的人，I 是正在传播的人，R 是停止传播或已澄清的人。",
