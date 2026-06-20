@@ -266,17 +266,17 @@ const sourceItems = [
   },
   {
     title: "双百大赛 H5 科普互动作品申报书模板",
-    org: "双百大赛 2026 模板 / 本地副本路径",
-    url: "命题/双百赛题与案例/3.H5科普互动作品作品申报书（2026年模板）.docx",
+    org: "安徽省百所高校百万大学生科普创意创新大赛官网",
+    url: "http://www.kepuah.cn/",
     visited: "2026-06-09",
-    use: "用于申报书 8 节结构映射与材料核对。",
+    use: "用于申报书 8 节结构映射与材料核对，模板由官网赛事提醒栏目下载。",
   },
   {
     title: "双百大赛 AI 工具使用情况说明书模板",
-    org: "双百大赛 2026 模板 / 本地副本路径",
-    url: "命题/双百赛题与案例/13.AI 工具使用情况说明书（2026年模板）.docx",
+    org: "安徽省百所高校百万大学生科普创意创新大赛官网",
+    url: "http://www.kepuah.cn/",
     visited: "2026-06-09",
-    use: "用于 AI 使用声明、占比、核验与责任承诺。",
+    use: "用于 AI 使用声明、占比、核验与责任承诺，模板由官网赛事提醒栏目下载。",
   },
 ];
 
@@ -598,7 +598,7 @@ function renderPersona() {
       </div>
       <div class="persona-footer">
         <button class="secondary-button persona-skip" type="button" data-persona="all">不选直接体验</button>
-        <p>仅写入 <code>sessionStorage.persona</code>，关闭页面后失效；作品不采集姓名、学校、手机号等真实身份。</p>
+        <p>仅写入 <code>sessionStorage.persona</code>，关闭页面后失效；作品不采集真实身份或联系方式。</p>
       </div>
     </section>
   `);
