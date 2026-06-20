@@ -161,7 +161,7 @@ const permissions = [
     riskWeight: 26,
     safeAction: "仅在导航附近场馆时临时允许",
     matrix: [
-      { feature: "宿舍学习", ok: false },
+      { feature: "公寓学习", ok: false },
       { feature: "查课表", ok: false },
       { feature: "扫码取餐", ok: false },
       { feature: "选课系统", ok: false },
@@ -176,7 +176,7 @@ const permissions = [
     riskWeight: 32,
     safeAction: "拒绝读取联系人，改用手动分享",
     matrix: [
-      { feature: "宿舍学习", ok: false },
+      { feature: "公寓学习", ok: false },
       { feature: "查课表", ok: false },
       { feature: "扫码取餐", ok: false },
       { feature: "选课系统", ok: false },
@@ -191,7 +191,7 @@ const permissions = [
     riskWeight: 12,
     safeAction: "扫码取餐或扫码查资料时临时允许",
     matrix: [
-      { feature: "宿舍学习", ok: false },
+      { feature: "公寓学习", ok: false },
       { feature: "查课表", ok: false },
       { feature: "扫码取餐", ok: true },
       { feature: "选课系统", ok: false },
@@ -206,7 +206,7 @@ const permissions = [
     riskWeight: 24,
     safeAction: "无语音输入场景时保持关闭",
     matrix: [
-      { feature: "宿舍学习", ok: false },
+      { feature: "公寓学习", ok: false },
       { feature: "查课表", ok: false },
       { feature: "扫码取餐", ok: false },
       { feature: "选课系统", ok: false },
@@ -1795,11 +1795,11 @@ function privacyScenario() {
   const copy = {
     youth: {
       eyebrow: "EXP-04 · DORM PRIVACY MATRIX",
-      title: "宿舍学习 App 权限判断",
-      lead: "模拟江淮某高校宿舍夜间学习场景：一个学习助手同时请求定位、通讯录、相机和麦克风。判断哪些权限与当前功能直接相关。",
-      scene: "宿舍学习 / 查课表 / 扫码取餐 / 选课系统",
+      title: "公寓学习 App 权限判断",
+      lead: "模拟江淮某青年公寓夜间学习场景：一个学习助手同时请求定位、通讯录、相机和麦克风。判断哪些权限与当前功能直接相关。",
+      scene: "公寓学习 / 查课表 / 扫码取餐 / 选课系统",
       prompt: "当前任务是学习、课表与扫码取餐，不需要读取通讯录，也不需要常开麦克风。",
-      appName: "模拟应用：宿舍学习助手",
+      appName: "模拟应用：青年公寓学习助手",
     },
     elder: {
       eyebrow: "EXP-04 · FAMILY APP PERMISSION",
